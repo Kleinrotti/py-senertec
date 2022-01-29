@@ -36,7 +36,7 @@ $ pip install py-senertec
 
 ```python
 from senertec.client import senertec
-from senertec.canipvalue import canipvalue
+from senertec.canipValue import canipValue
 import json
 import os
 
@@ -71,7 +71,7 @@ In order for your to be alerted of such a change, you need to add a callback whi
 The callback function could look like this:
 
 ```python
-def output(self, value: canipvalue):
+def output(self, value: canipValue):
         print(value.friendlyDataName + ": " +
               value.dataValue.__str__() + value.dataUnit)
 ```
