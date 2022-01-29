@@ -4,7 +4,7 @@
 
 ## Description
 
-The **py-senertec** library aims to provide python way to communicate with senertec dachs connect gen2.
+The **py-senertec** library provides a way to communicate with senertec dachsportal2 to monitor your energy unit.
 
 ## Requirements
 
@@ -55,11 +55,11 @@ senertec.messagecallback = self.output
 ```python
 serial = senertec.getUnits()
 senertec.connectUnit(serial[0])
-# request all available data
+# request all available data from all boards
 for points in senertec.boards:
-            l = points.getFullDataPointIds()
+            ids = points.getFullDataPointIds()
             # result will be received through callback function which was set above
-            senertec.request(l)
+            senertec.request(ids)
 senertec.logout()
 ```
 
@@ -80,6 +80,6 @@ Errors can also be read out with a simple function.
 The errors are read out on the connect function and only will be refreshed on a reconnect.
 
 ```python
-# these are returned directly from function
+# values are returned directly from function
 k = senertec.getErrors()
 ```
