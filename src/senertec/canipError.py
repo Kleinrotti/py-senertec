@@ -1,4 +1,3 @@
-
 class canipError(object):
     boardName = str()
     counter = int()

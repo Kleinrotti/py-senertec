@@ -1,9 +1,9 @@
 import json
 import os
-import sys
 from unittest import TestCase
 
-from src.senertec.client import Senertec
+from src.senertec.client import senertec
+
 
 class TestConnection(TestCase):
     def __init__(self, methodName: str = ...) -> None:
@@ -11,8 +11,8 @@ class TestConnection(TestCase):
         file = open(os.getcwd() + "\\productGroups.json")
         supportedItems = json.load(file)
         file.close()
-        self.senertec = Senertec(supportedItems,
-            os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
+        self.senertec = senertec(supportedItems,
+                                 os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
 
     def test_auth(self):
         result = self.senertec.login()

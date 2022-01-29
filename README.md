@@ -1,6 +1,7 @@
 # py-senertec
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://badge.fury.io/py/py-senertec.svg)](https://badge.fury.io/py/py-senertec)
 
 ## Description
 
@@ -9,7 +10,7 @@ The **py-senertec** library provides a way to communicate with senertec dachspor
 ## Requirements
 
 *   **Python 3.6+**
-*   **productGroups.json from this [repo](https://github.com/Kleinrotti/py-senertec)**
+*   **productGroups.json from [repo](https://github.com/Kleinrotti/py-senertec/blob/main/productGroups.json)**
 *   **Account for Senertec Dachsportal2/Remeha KWK**
 
 ## Supported devices
@@ -34,7 +35,7 @@ $ pip install py-senertec
 ### Login and initialization
 
 ```python
-from senertec.client import Senertec
+from senertec.client import senertec
 from senertec.canipvalue import canipvalue
 import json
 import os
@@ -43,11 +44,11 @@ import os
 file = open(os.getcwd() + "\\productGroups.json")
 supportedItems = json.load(file)
 file.close()
-senertec = Senertec(supportedItems, "username", "password")
-senertec.login()
-senertec.init()
+senertec = senertec(supportedItems, "username", "password")
 #set your callback function for messages
 senertec.messagecallback = self.output
+senertec.login()
+senertec.init()
 ```
 
 ### Requesting data
@@ -71,8 +72,8 @@ The callback function could look like this:
 
 ```python
 def output(self, value: canipvalue):
-        print(value.friendlydataname + ": " +
-              value.datavalue.__str__() + value.dataunit)
+        print(value.friendlyDataName + ": " +
+              value.dataValue.__str__() + value.dataUnit)
 ```
 
 ### Errors of energy unit

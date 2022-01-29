@@ -27,22 +27,22 @@ class basesocketclient:
         j = json.loads(message)
         if j["action"] == "CanipValue":
             for b in self.boards:
-                if b.boardname == j["data"]["boardName"]:
+                if b.boardName == j["data"]["boardName"]:
                     value = canipvalue()
-                    value.boardname = b.boardname
+                    value.boardName = b.boardName
                     for point in b.datapoints:
                         if point.id == j["data"]["dataPointName"]:
-                            value.friendlydataname = point.friendlyname
+                            value.friendlyDataName = point.friendlyName
                             if point.gain != 0 and point.gain != 1:
-                                value.datavalue = j["data"]["value"] * \
+                                value.dataValue = j["data"]["value"] * \
                                     point.gain
                             else:
-                                value.datavalue = j["data"]["value"]
-                            value.dataunit = point.unit
+                                value.dataValue = j["data"]["value"]
+                            value.dataUnit = point.unit
                             if point.unit is not None:
-                                value.dataunit = point.unit
+                                value.dataUnit = point.unit
                             else:
-                                value.dataunit = ""
+                                value.dataUnit = ""
                             self.messagecallback(value)
                             break
         if j["action"] == "HkaStore" and j["data"]["updateType"] == "remove":  # reconnect
@@ -81,7 +81,7 @@ class basesocketclient:
         self.__thread__.start()
 
 
-class Senertec(basesocketclient):
+class senertec(basesocketclient):
     """Class to communicate with Senertec and handle network calls"""
 
     def __init__(self, dataNames, email: str = None, password: str = None, level=logging.INFO):
@@ -155,20 +155,20 @@ class Senertec(basesocketclient):
                                 boardname = l["name"]
                     datap = datapoint()
                     datap.id = metaData[a]["name"]
-                    datap.friendlyname = self.__metaDataTranslations__[
+                    datap.friendlyName = self.__metaDataTranslations__[
                         metaData[a]["name"]]
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
-                    if not any(x for x in blist if x.boardname == boardname):
+                    if not any(x for x in blist if x.boardName == boardname):
                         b = board()
-                        b.boardname = boardname
+                        b.boardName = boardname
                         b.datapoints.append(datap)
                         blist.append(b)
                     else:
                         for b in blist:
-                            if b.boardname == boardname:
+                            if b.boardName == boardname:
                                 b.datapoints.append(datap)
-        self.dataPoints = blist
+        self.boards = blist
 
     def login(self):
         """
