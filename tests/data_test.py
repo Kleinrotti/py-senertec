@@ -2,8 +2,9 @@ import json
 import os
 from unittest import TestCase
 from time import sleep
-from src.senertec.canipvalue import canipvalue
-from src.senertec.client import senertec
+from senertec.canipValue import canipValue
+from senertec.client import senertec
+
 
 class TestConnection(TestCase):
     def __init__(self, methodName: str = ...) -> None:
@@ -12,7 +13,7 @@ class TestConnection(TestCase):
         supportedItems = json.load(file)
         file.close()
         self.senertec = senertec(supportedItems,
-            os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
+                                 os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
 
     def test_brennstoffzellenChart(self):
         self.senertec.login()
@@ -34,9 +35,8 @@ class TestConnection(TestCase):
             response = self.senertec.request(l)
             self.assertTrue(response)
         sleep(3)
-        k = self.senertec.getErrors()
         self.senertec.logout()
 
-    def output(self, value: canipvalue):
+    def output(self, value: canipValue):
         print(value.friendlyDataName + ": " +
               value.dataValue.__str__() + value.dataUnit)

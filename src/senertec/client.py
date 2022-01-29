@@ -5,10 +5,10 @@ import logging
 from threading import Thread
 import requests
 import websocket
-from src.senertec.canipError import canipError
-from src.senertec.canipvalue import canipvalue
-from src.senertec.board import board
-from src.senertec.datapoint import datapoint
+from senertec.canipError import canipError
+from senertec.canipValue import canipValue
+from senertec.board import board
+from senertec.datapoint import datapoint
 
 
 class basesocketclient:
@@ -28,7 +28,7 @@ class basesocketclient:
         if j["action"] == "CanipValue":
             for b in self.boards:
                 if b.boardName == j["data"]["boardName"]:
-                    value = canipvalue()
+                    value = canipValue()
                     value.boardName = b.boardName
                     for point in b.datapoints:
                         if point.id == j["data"]["dataPointName"]:
@@ -110,7 +110,7 @@ class senertec(basesocketclient):
         self.__errorTranslations__ = []
         self.__connectedUnit__ = []
         """Websocket messages"""
-        self.messagecallback = (canipvalue())
+        self.messagecallback = (canipValue())
         """Set your callback function to get the data values. Function has to be overloaded with data type canipvalue"""
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)

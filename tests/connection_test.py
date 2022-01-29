@@ -1,8 +1,7 @@
 import json
 import os
 from unittest import TestCase
-
-from src.senertec.client import senertec
+from senertec.client import senertec
 
 
 class TestConnection(TestCase):

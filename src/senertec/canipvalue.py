@@ -1,4 +1,4 @@
-class canipvalue(object):
+class canipValue(object):
     def __init__(self):
         self.boardName = str()
         self.friendlyBoardName = str()

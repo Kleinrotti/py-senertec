@@ -5,11 +5,11 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="py-senertec",
-    version="0.0.2",
+    version="0.0.3",
     author="Kleinrotti",
     author_email="",
     package_dir={"": "src"},
-    packages=setuptools.find_packages(where="src"),
+    packages=setuptools.find_packages("src"),
     description="Senertec energy system gen2 interface.",
     long_description=long_description,
     long_description_content_type="text/markdown",
