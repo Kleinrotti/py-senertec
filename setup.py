@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="py-senertec",
-    version="0.0.3",
+    version="0.0.4",
     author="Kleinrotti",
     author_email="",
     package_dir={"": "src"},
@@ -24,7 +24,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-         "websockets>=10.1",
+         "websocket-client>=1.2.3",
          "requests>=2.27"
     ]
 )
