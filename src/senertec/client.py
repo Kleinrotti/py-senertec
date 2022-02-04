@@ -5,6 +5,7 @@ import logging
 from threading import Thread
 import requests
 import websocket
+from senertec.lang import lang
 from senertec.canipError import canipError
 from senertec.canipValue import canipValue
 from senertec.board import board
@@ -89,10 +90,12 @@ class basesocketclient:
 class senertec(basesocketclient):
     """Class to communicate with Senertec and handle network calls"""
 
-    def __init__(self, dataNames, email: str = None, password: str = None, level=logging.INFO):
+    def __init__(self, dataNames, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
 
         ``dataNames`` Json string of the productGroups.json file.
+
+        ``language`` Set to your language.
         """
         if email is None or password is None:
             raise ValueError(
@@ -106,6 +109,7 @@ class senertec(basesocketclient):
         )
         self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com/dachsportal2"
         self.email = email
+        self.language = language
         self.password = password
         self.level = level
         self.__supportedItems__ = dataNames
@@ -118,7 +122,7 @@ class senertec(basesocketclient):
         self.__connectedUnit__ = []
         """Websocket messages"""
         self.messagecallback = (canipValue())
-        """Set your callback function to get the data values. Function has to be overloaded with data type canipvalue"""
+        """Set your callback function to get the data values. Function has to be overloaded with data type ``canipvalue``"""
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
 
@@ -167,6 +171,7 @@ class senertec(basesocketclient):
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
                     datap.enumName = metaData[a]["enumName"]
+                    #avoid doubled board entries
                     if not any(x for x in blist if x.boardName == boardname):
                         b = board()
                         b.boardName = boardname
@@ -215,9 +220,10 @@ class senertec(basesocketclient):
             j = json.loads(response.text)
             self.__metaDataPoints__ = j["metaDataPoints"]
             self.__enums__ = j["enums"]
-            self.__enumTranslations__ = j["translations"]["de-de"]["enums"]
-            self.__metaDataTranslations__ = j["translations"]["de-de"]["metaDataPoints"]["translations"]
-            self.__errorTranslations__ = j["translations"]["de-de"]["errorCategories"]
+            self.__enumTranslations__ = j["translations"][f"{self.language.value}"]["enums"]
+            self.__metaDataTranslations__ = j["translations"][
+                f"{self.language.value}"]["metaDataPoints"]["translations"]
+            self.__errorTranslations__ = j["translations"][f"{self.language.value}"]["errorCategories"]
             return True
         else:
             return False
