@@ -13,6 +13,7 @@ from senertec.datapoint import datapoint
 
 
 class basesocketclient:
+    """Base class which provides logic for a senertec websocket connection."""
     def __init__(self, level=logging.WARN):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
@@ -90,16 +91,16 @@ class basesocketclient:
 class senertec(basesocketclient):
     """Class to communicate with Senertec and handle network calls"""
 
-    def __init__(self, dataNames, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
+    def __init__(self, dataNames = None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
 
         ``dataNames`` Json string of the productGroups.json file.
 
         ``language`` Set to your language.
         """
-        if email is None or password is None:
+        if email is None or password is None or dataNames is None:
             raise ValueError(
-                "Arguments 'email', 'passwords' are required"
+                "Arguments 'email', 'passwords', dataNames are required"
             )
         super().__init__(level)
         logging.basicConfig(
