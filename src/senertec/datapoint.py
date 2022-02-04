@@ -4,3 +4,4 @@ class datapoint(object):
         self.friendlyName = str()
         self.unit = str()
         self.gain = int()
+        self.enumName = str()

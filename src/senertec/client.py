@@ -33,13 +33,18 @@ class basesocketclient:
                     for point in b.datapoints:
                         if point.id == j["data"]["dataPointName"]:
                             value.friendlyDataName = point.friendlyName
-                            if point.gain != 0 and point.gain != 1:
-                                value.dataValue = j["data"]["value"] * \
+                            tempValue = j["data"]["value"]
+                            if point.enumName != None:
+                                for enum in self.__enumTranslations__:
+                                    if point.enumName == enum["name"]:
+                                        value.dataValue = enum["translations"][f"{tempValue}"]
+                            elif point.gain != 0 and point.gain != 1:
+                                value.dataValue = tempValue * \
                                     point.gain
                             else:
-                                value.dataValue = j["data"]["value"]
+                                value.dataValue = tempValue
                             value.dataUnit = point.unit
-                            if point.unit is not None:
+                            if point.unit != None:
                                 value.dataUnit = point.unit
                             else:
                                 value.dataUnit = ""
@@ -104,9 +109,11 @@ class senertec(basesocketclient):
         self.password = password
         self.level = level
         self.__supportedItems__ = dataNames
+        self.__enums__ = []
         self.__clientCookie__ = None
         self.__metaDataPoints__ = []
         self.__metaDataTranslations__ = []
+        self.__enumTranslations__ = []
         self.__errorTranslations__ = []
         self.__connectedUnit__ = []
         """Websocket messages"""
@@ -159,6 +166,7 @@ class senertec(basesocketclient):
                         metaData[a]["name"]]
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
+                    datap.enumName = metaData[a]["enumName"]
                     if not any(x for x in blist if x.boardName == boardname):
                         b = board()
                         b.boardName = boardname
@@ -206,6 +214,8 @@ class senertec(basesocketclient):
             self.__create_websocket__()
             j = json.loads(response.text)
             self.__metaDataPoints__ = j["metaDataPoints"]
+            self.__enums__ = j["enums"]
+            self.__enumTranslations__ = j["translations"]["de-de"]["enums"]
             self.__metaDataTranslations__ = j["translations"]["de-de"]["metaDataPoints"]["translations"]
             self.__errorTranslations__ = j["translations"]["de-de"]["errorCategories"]
             return True
@@ -232,7 +242,7 @@ class senertec(basesocketclient):
         """
         Connect to a unit.
         This function connects to a unit and enables receiving data for that unit.
-        
+
         ``serial`` Serial number of energy unit. Can be received with getUnits() method.
         """
         response = self.__get__(f"/rest/canip/{serial}")
