@@ -54,8 +54,8 @@ senertec.init()
 ### Requesting data
 
 ```python
-serial = senertec.getUnits()
-senertec.connectUnit(serial[0])
+units = senertec.getUnits()
+senertec.connectUnit(units[0]["serial"])
 # request all available data from all boards
 for points in senertec.boards:
             ids = points.getFullDataPointIds()
