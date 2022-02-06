@@ -14,6 +14,7 @@ from senertec.datapoint import datapoint
 
 class basesocketclient:
     """Base class which provides logic for a senertec websocket connection."""
+
     def __init__(self, level=logging.WARN):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
@@ -91,7 +92,7 @@ class basesocketclient:
 class senertec(basesocketclient):
     """Class to communicate with Senertec and handle network calls"""
 
-    def __init__(self, dataNames = None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
+    def __init__(self, dataNames=None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
 
         ``dataNames`` Json string of the productGroups.json file.
@@ -121,7 +122,6 @@ class senertec(basesocketclient):
         self.__enumTranslations__ = []
         self.__errorTranslations__ = []
         self.__connectedUnit__ = []
-        """Websocket messages"""
         self.messagecallback = (canipValue())
         """Set your callback function to get the data values. Function has to be overloaded with data type ``canipvalue``"""
         self.logger = logging.getLogger(__name__)
@@ -172,7 +172,7 @@ class senertec(basesocketclient):
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
                     datap.enumName = metaData[a]["enumName"]
-                    #avoid doubled board entries
+                    # avoid doubled board entries
                     if not any(x for x in blist if x.boardName == boardname):
                         b = board()
                         b.boardName = boardname
@@ -240,7 +240,8 @@ class senertec(basesocketclient):
             values = json.loads(response.text)
             units = []
             for x in values["units"]:
-                units.append(x["seriennummer"])
+                units.append(
+                    {"name": x["benennung"], "serial": x["seriennummer"]})
             return units
         else:
             return None
