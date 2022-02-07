@@ -11,3 +11,5 @@ class canipValue(object):
         """Unit of the value."""
         self.friendlyDataName = str()
         """Human readable data value name."""
+        self.sourceDatapoint = str()
+        """Id of datapoint which was requested."""

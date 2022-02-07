@@ -36,6 +36,7 @@ class basesocketclient:
                     for point in b.datapoints:
                         if point.id == j["data"]["dataPointName"]:
                             value.friendlyDataName = point.friendlyName
+                            value.sourceDatapoint = point.sourceId
                             tempValue = j["data"]["value"]
                             if point.enumName != None:
                                 for enum in self.__enumTranslations__:
@@ -166,6 +167,7 @@ class senertec(basesocketclient):
                             if o == metaData[a]["name"]:
                                 boardname = l["name"]
                     datap = datapoint()
+                    datap.sourceId = element
                     datap.id = metaData[a]["name"]
                     datap.friendlyName = self.__metaDataTranslations__[
                         metaData[a]["name"]]

@@ -3,6 +3,8 @@ class datapoint(object):
     def __init__(self):
         self.id = str()
         """Unique datapoint id. This id is random and changes every session."""
+        self.sourceId = str()
+        """Id of datapoint from productGroups."""
         self.friendlyName = str()
         """Human readable name of the datapoint."""
         self.unit = str()
