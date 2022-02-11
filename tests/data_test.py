@@ -38,5 +38,6 @@ class TestConnection(TestCase):
         self.senertec.logout()
 
     def output(self, value: canipValue):
-        print(value.friendlyDataName + ": " +
-              value.dataValue.__str__() + value.dataUnit)
+        print("Source: " + value.sourceDatapoint + "\nBoard: " +
+              value.boardName + "\nName: " + value.friendlyDataName + "\nValue: " +
+              value.dataValue.__str__() + value.dataUnit + "\n")
