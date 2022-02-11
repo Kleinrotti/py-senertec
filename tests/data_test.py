@@ -2,7 +2,6 @@ import json
 import os
 from unittest import TestCase
 from time import sleep
-from senertec.energyUnit import energyUnit
 from senertec.canipValue import canipValue
 from senertec.client import senertec
 
