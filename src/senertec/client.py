@@ -5,6 +5,7 @@ import logging
 from threading import Thread
 import requests
 import websocket
+from senertec.energyUnit import energyUnit
 from senertec.lang import lang
 from senertec.canipError import canipError
 from senertec.canipValue import canipValue
@@ -231,7 +232,7 @@ class senertec(basesocketclient):
         else:
             return False
 
-    def getUnits(self):
+    def getUnits(self) -> list[energyUnit]:
         """
         Get all units.
         This function receives all senertec products of this account.
@@ -242,8 +243,10 @@ class senertec(basesocketclient):
             values = json.loads(response.text)
             units = []
             for x in values["units"]:
-                units.append(
-                    {"name": x["benennung"], "serial": x["seriennummer"]})
+                unit = energyUnit()
+                unit.model = x["benennung"]
+                unit.serial = x["seriennummer"]
+                units.append(unit)
             return units
         else:
             return None

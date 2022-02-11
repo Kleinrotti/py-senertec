@@ -2,6 +2,7 @@ import json
 import os
 from unittest import TestCase
 from time import sleep
+from senertec.energyUnit import energyUnit
 from senertec.canipValue import canipValue
 from senertec.client import senertec
 
@@ -19,7 +20,7 @@ class TestConnection(TestCase):
         self.senertec.login()
         self.senertec.init()
         serial = self.senertec.getUnits()
-        self.senertec.connectUnit(serial[0]["serial"])
+        self.senertec.connectUnit(serial[0].serial)
         chart = self.senertec.getChart("ChartChpActivityFCEnduser")
         self.senertec.logout()
         self.assertTrue(chart != None)
@@ -29,7 +30,7 @@ class TestConnection(TestCase):
         self.senertec.init()
         self.senertec.messagecallback = self.output
         serial = self.senertec.getUnits()
-        self.senertec.connectUnit(serial[0]["serial"])
+        self.senertec.connectUnit(serial[0].serial)
         for points in self.senertec.boards:
             l = points.getFullDataPointIds()
             response = self.senertec.request(l)
