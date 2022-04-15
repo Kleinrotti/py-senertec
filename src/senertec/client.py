@@ -202,7 +202,10 @@ class senertec(basesocketclient):
     def login(self):
         """
         Authenticate and get cookie.
+
         This function needs to be called first.
+
+        Returns True on success, False on failure.
         """
         self.logger.info("Logging in..")
         response = self.__post__("/rest/info/login", json.dumps(
@@ -217,6 +220,8 @@ class senertec(basesocketclient):
     def logout(self):
         """
         Logout from senertec.
+
+        Returns True on success, False on failure.
         """
         self.logger.info("Logging out..")
         response = self.__get__("/logout")
@@ -230,7 +235,10 @@ class senertec(basesocketclient):
     def init(self):
         """
         Initialize Senertec platform and connect to websocket.
+
         This function needs to be called after login.
+
+        Returns True on success, False on failure.
         """
         self.logger.info("Initializing senertec platform...")
         response = self.__get__("/rest/info/init")
@@ -250,7 +258,8 @@ class senertec(basesocketclient):
     def getUnits(self) -> list[energyUnit]:
         """
         Get all units.
-        This function receives all senertec products of this account.
+
+        Returns all senertec products of this account as list.
         """
         response = self.__post__(
             "/rest/info/units", json.dumps({"limit": 10, "offset": 0, "filter": {}}))
@@ -271,9 +280,12 @@ class senertec(basesocketclient):
     def connectUnit(self, serial: str):
         """
         Connect to a unit.
+
         This function connects to a unit and enables receiving data for that unit.
 
         ``serial`` Serial number of energy unit. Can be received with getUnits() method.
+
+        Returns True on success, False on failure.
         """
         response = self.__get__(f"/rest/canip/{serial}")
         if response.status_code == 200:
@@ -286,7 +298,10 @@ class senertec(basesocketclient):
     def disconnectUnit(self):
         """
         Disconnect from a unit.
+
         This function disconnects from a unit.
+
+        Returns True on success, False on failure.
         """
         sn = self.__connectedUnit__["seriennummer"]
         response = self.__get__(f"/rest/canip/{sn}/disconnect")
@@ -309,9 +324,12 @@ class senertec(basesocketclient):
     def request(self, dataPoints: list):
         """
         Request data from specific data points of the connected unit.
-        Data received through websocket.
+
+        Data wil be received through websocket.
 
         ``dataPoints`` List of datapoint strings
+
+        Returns True on success, False on failure.
         """
         sn = self.__connectedUnit__["seriennummer"]
         j = json.dumps(
@@ -332,7 +350,9 @@ class senertec(basesocketclient):
         return lst
 
     def getErrors(self, onlyCurrentErrors: bool = True):
-        """Get an error history of the connected unit. This gets loaded when a unit gets connected."""
+        """Get an error history of the connected unit. 
+
+        This gets loaded when a unit gets connected."""
         lst = [canipError]
         for b in self.__connectedUnit__["boards"]:
             for e in b["canipErrors"]:
