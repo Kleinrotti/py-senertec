@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from unittest import TestCase
 from time import sleep
@@ -13,7 +14,7 @@ class TestConnection(TestCase):
         supportedItems = json.load(file)
         file.close()
         self.senertec = senertec(supportedItems,
-                                 os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
+                                 os.environ['SENERTECUSER'], os.environ['SENERTECPW'],level=logging.DEBUG)
 
     def test_brennstoffzellenChart(self):
         self.senertec.login()
