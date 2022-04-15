@@ -29,16 +29,19 @@ class basesocketclient:
 
     def __on_message__(self, ws, message):
         j = json.loads(message)
-        if j["action"] == "CanipValue":
+        action = j["action"]
+        data = j["data"]
+        if action == "CanipValue":
+            self.logger.debug("Received new CanipValue from websocket.")
             for b in self.boards:
-                if b.boardName == j["data"]["boardName"]:
+                if b.boardName == data["boardName"]:
                     value = canipValue()
                     value.boardName = b.boardName
                     for point in b.datapoints:
-                        if point.id == j["data"]["dataPointName"]:
+                        if point.id == data["dataPointName"]:
                             value.friendlyDataName = point.friendlyName
                             value.sourceDatapoint = point.sourceId
-                            tempValue = j["data"]["value"]
+                            tempValue = data["value"]
                             if point.enumName != None:
                                 for enum in self.__enumTranslations__:
                                     if point.enumName == enum["name"]:
@@ -55,9 +58,14 @@ class basesocketclient:
                                 value.dataUnit = ""
                             self.messagecallback(value)
                             break
-        if j["action"] == "HkaStore" and j["data"]["updateType"] == "remove":  # reconnect
-            self.connectUnit(j["sn"])
+        # reconnect
+        elif action == "HkaStore" and data["updateType"] == "remove":
+            sn = j["sn"]
+            self.logger.info(
+                f"Unit with serial {sn} got disconnected. Started reconnect..")
+            self.connectUnit(sn)
         else:
+            self.logger.debug(f"Received new websocket message {action}.")
             self.__messages__.append(message)
 
     def __on_error__(self, ws, error):
@@ -76,6 +84,7 @@ class basesocketclient:
     def __create_websocket__(self):
         cookies = self.__getCookies__(
             self.__clientCookie__, "dachsconnect.senertec.com")
+        self.logger.debug("Creating websocket connection..")
         self.ws = websocket.WebSocketApp("wss://dachsconnect.senertec.com/dachsportal2/ws",
                                          on_message=self.__on_message__,
                                          on_error=self.__on_error__,
@@ -89,6 +98,7 @@ class basesocketclient:
         self.__thread__.daemon = True
         self.__thread__.setName("senertec-websocket")
         self.__thread__.start()
+        self.logger.debug("Websocket connection started.")
 
 
 class senertec(basesocketclient):
@@ -108,7 +118,7 @@ class senertec(basesocketclient):
         super().__init__(level)
         logging.basicConfig(
             level=level,
-            format='%(asctime)s %(levelname)-8s %(message)s',
+            format='py-senertec: %(asctime)s %(levelname)-8s %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
         self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com/dachsportal2"
@@ -145,7 +155,7 @@ class senertec(basesocketclient):
             url, data=payload, headers=self.__create_headers__(), cookies=self.__clientCookie__)
         if(response.status_code >= 400 and response.status_code <= 599):
             logger.error("Error in post request by function: " + inspect.stack()
-                         [1].function + "HTTP response: " + response.text)
+                         [1].function + " HTTP response: " + response.text)
         return response
 
     def __get__(self, urlPath: str):
@@ -154,10 +164,11 @@ class senertec(basesocketclient):
             url, headers=self.__create_headers__(), cookies=self.__clientCookie__)
         if(response.status_code >= 400 and response.status_code <= 599):
             logger.error("Error in get request by function: " + inspect.stack()
-                         [1].function + "HTTP response: " + response.text)
+                         [1].function + " HTTP response: " + response.text)
         return response
 
     def __parsedatapoints__(self):
+        self.logger.debug("Starting to parse datapoints..")
         metaData = self.__metaDataPoints__
         blist = []
         for a in metaData:
@@ -186,17 +197,19 @@ class senertec(basesocketclient):
                             if b.boardName == boardname:
                                 b.datapoints.append(datap)
         self.boards = blist
+        self.logger.debug(f"Parsing datapoints finished, found {len(blist)}.")
 
     def login(self):
         """
         Authenticate and get cookie.
         This function needs to be called first.
         """
-        self.logger.info("Logging in...")
+        self.logger.info("Logging in..")
         response = self.__post__("/rest/info/login", json.dumps(
             {"user": self.email, "password": self.password}))
         if response.status_code == 200:
             self.__clientCookie__ = response.cookies
+            self.logger.debug("Login was successful.")
             return True
         else:
             return False
@@ -205,9 +218,11 @@ class senertec(basesocketclient):
         """
         Logout from senertec.
         """
-        self.logger.info("Logging out...")
+        self.logger.info("Logging out..")
         response = self.__get__("/logout")
+        self.ws.close()
         if response.status_code == 302:
+            self.logger.debug("Logout was successful.")
             return True
         else:
             return False
@@ -247,6 +262,8 @@ class senertec(basesocketclient):
                 unit.model = x["benennung"]
                 unit.serial = x["seriennummer"]
                 units.append(unit)
+            self.logger.debug(
+                f"Successful received a list of {len(units)} units.")
             return units
         else:
             return None
@@ -297,9 +314,10 @@ class senertec(basesocketclient):
         ``dataPoints`` List of datapoint strings
         """
         sn = self.__connectedUnit__["seriennummer"]
+        j = json.dumps(
+            {"seriennummer": sn, "keys": dataPoints})
         response = self.__post__(
-            f"/rest/canip/{sn}/request", json.dumps(
-                {"seriennummer": sn, "keys": dataPoints}))
+            f"/rest/canip/{sn}/request", j)
         result = json.loads(response.text)
         if response.status_code == 200 and result["success"] and not result["errorKeys"]:
             return True
