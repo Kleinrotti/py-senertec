@@ -45,13 +45,12 @@ class basesocketclient:
                             if point.enumName != None:
                                 for enum in self.__enumTranslations__:
                                     if point.enumName == enum["name"]:
-                                        value.dataValue = enum["translations"][f"{tempValue}"]
+                                        value.dataValue = enum["translations"][f"{tempValue}"] #TODO fix 255 error
                             elif point.gain != 0 and point.gain != 1:
                                 value.dataValue = tempValue * \
                                     point.gain
                             else:
                                 value.dataValue = tempValue
-                            value.dataUnit = point.unit
                             if point.unit != None:
                                 value.dataUnit = point.unit
                             else:
@@ -62,8 +61,7 @@ class basesocketclient:
         elif action == "HkaStore" and data["updateType"] == "remove":
             sn = j["sn"]
             self.logger.info(
-                f"Unit with serial {sn} got disconnected. Started reconnect..")
-            self.connectUnit(sn)
+                f"Unit with serial {sn} got disconnected.")
         else:
             self.logger.debug(f"Received new websocket message {action}.")
             self.__messages__.append(message)
@@ -74,7 +72,7 @@ class basesocketclient:
 
     def __on_close__(self, ws, close_status_code, close_msg):
         self.logger.info(
-            f"Connection closed to Senertec with code {close_status_code}")
+            f"Senertec Websocket closed with code {close_status_code}")
         self.__is_ws_connected__ = False
 
     def __on_open__(self, ws):
