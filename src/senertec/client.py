@@ -45,7 +45,12 @@ class basesocketclient:
                             if point.enumName != None:
                                 for enum in self.__enumTranslations__:
                                     if point.enumName == enum["name"]:
-                                        value.dataValue = enum["translations"][f"{tempValue}"] #TODO fix 255 error
+                                        try:
+                                            value.dataValue = enum["translations"][f"{tempValue}"]
+                                        except KeyError:
+                                            self.logger.warning(
+                                                f"No enum translation found for datapoint '{point.friendlyName}'.")
+                                            value.dataValue = "Unknown"
                             elif point.gain != 0 and point.gain != 1:
                                 value.dataValue = tempValue * \
                                     point.gain
@@ -68,7 +73,6 @@ class basesocketclient:
 
     def __on_error__(self, ws, error):
         self.logger.error(f"error : {error}")
-        self.__is_ws_connected__ = False
 
     def __on_close__(self, ws, close_status_code, close_msg):
         self.logger.info(
@@ -169,6 +173,7 @@ class senertec(basesocketclient):
         self.logger.debug("Starting to parse datapoints..")
         metaData = self.__metaDataPoints__
         blist = []
+        dataPointCount = 0
         for a in metaData:
             for element in self.__supportedItems__[self.__connectedUnit__["productGroup"]]:
                 if metaData[a]["friendlyName"] == element:
@@ -184,6 +189,7 @@ class senertec(basesocketclient):
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
                     datap.enumName = metaData[a]["enumName"]
+                    dataPointCount += 1
                     # avoid doubled board entries
                     if not any(x for x in blist if x.boardName == boardname):
                         b = board()
@@ -195,7 +201,8 @@ class senertec(basesocketclient):
                             if b.boardName == boardname:
                                 b.datapoints.append(datap)
         self.boards = blist
-        self.logger.debug(f"Parsing datapoints finished, found {len(blist)}.")
+        self.logger.debug(
+            f"Parsing datapoints finished, found {len(blist)} boards with {dataPointCount} datapoints.")
 
     def login(self):
         """
