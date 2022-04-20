@@ -354,11 +354,11 @@ class senertec(basesocketclient):
             lst.append(b["name"])
         return lst
 
-    def getErrors(self, onlyCurrentErrors: bool = True):
+    def getErrors(self, onlyCurrentErrors: bool = True) -> list[canipError]:
         """Get an error history of the connected unit. 
 
         This gets loaded when a unit gets connected."""
-        lst = [canipError]
+        lst = []
         for b in self.__connectedUnit__["boards"]:
             for e in b["canipErrors"]:
                 if onlyCurrentErrors and not e["currentError"]:
