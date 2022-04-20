@@ -22,7 +22,6 @@ class basesocketclient:
         self.__is_ws_connected__ = False
         self.__messages__ = [str()]
         self.__thread__ = None
-        self.__should_stop__ = False
         self.ws = None
         self.boards = [board()]
         """All available boards with datapoints which can be used in request function"""
@@ -137,7 +136,7 @@ class senertec(basesocketclient):
         self.__errorTranslations__ = []
         self.__connectedUnit__ = []
         self.messagecallback = (canipValue())
-        """Set your callback function to get the data values. Function has to be overloaded with data type ``canipvalue``"""
+        """Set your callback function to get the data values. Function has to be overloaded with data type ``canipValue``"""
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
 
@@ -165,8 +164,8 @@ class senertec(basesocketclient):
         response = requests.get(
             url, headers=self.__create_headers__(), cookies=self.__clientCookie__)
         if(response.status_code >= 400 and response.status_code <= 599):
-            logger.error("Error in get request by function: " + inspect.stack()
-                         [1].function + " HTTP response: " + response.text)
+            logger.error("Error in get request by function: {" + inspect.stack()
+                         [1].function + "} HTTP response: " + response.text)
         return response
 
     def __parsedatapoints__(self):
