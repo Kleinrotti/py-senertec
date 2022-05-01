@@ -17,6 +17,7 @@ The **py-senertec** library provides a way to communicate with senertec dachspor
 
 For now, these devices are supported:  
 *   Senertec Dachs 0.8
+*   Senertec Dachs Gen2 F5.5
 *   Remeha eLecta 300 (technically same as Senertec Dachs)
 
 ## Support for other devices
