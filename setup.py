@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="py-senertec",
-    version="0.2.0",
+    version="0.2.1",
     author="Kleinrotti",
     author_email="",
     package_dir={"": "src"},
@@ -25,6 +25,7 @@ setuptools.setup(
     ],
     install_requires=[
          "websocket-client>=1.2.3",
-         "requests>=2.27"
+         "requests>=2.27",
+         "beautifulsoup4>=4.11"
     ]
 )

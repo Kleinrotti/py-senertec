@@ -5,6 +5,7 @@ import logging
 from threading import Thread
 import requests
 import websocket
+from bs4 import BeautifulSoup
 from senertec.energyUnit import energyUnit
 from senertec.lang import lang
 from senertec.canipError import canipError
@@ -84,9 +85,9 @@ class basesocketclient:
 
     def __create_websocket__(self):
         cookies = self.__getCookies__(
-            self.__clientCookie__, "dachsconnect.senertec.com")
+            self.__session__.cookies, "dachsconnect.senertec.com")
         self.logger.debug("Creating websocket connection..")
-        self.ws = websocket.WebSocketApp("wss://dachsconnect.senertec.com/dachsportal2/ws",
+        self.ws = websocket.WebSocketApp("wss://dachsconnect.senertec.com/ws",
                                          on_message=self.__on_message__,
                                          on_error=self.__on_error__,
                                          on_close=self.__on_close__,
@@ -122,14 +123,14 @@ class senertec(basesocketclient):
             format='py-senertec: %(asctime)s %(levelname)-8s %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
-        self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com/dachsportal2"
+        self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com"
         self.email = email
+        self.__session__ = None
         self.language = language
         self.password = password
         self.level = level
         self.__supportedItems__ = dataNames
         self.__enums__ = []
-        self.__clientCookie__ = None
         self.__metaDataPoints__ = []
         self.__metaDataTranslations__ = []
         self.__enumTranslations__ = []
@@ -152,8 +153,8 @@ class senertec(basesocketclient):
 
     def __post__(self, urlPath: str, payload: str):
         url = self.AUTHENTICATION_HOST + urlPath
-        response = requests.post(
-            url, data=payload, headers=self.__create_headers__(), cookies=self.__clientCookie__)
+        response = self.__session__.post(
+            url, data=payload, headers=self.__create_headers__())
         if(response.status_code >= 400 and response.status_code <= 599):
             logger.error("Error in post request by function: " + inspect.stack()
                          [1].function + " HTTP response: " + response.text)
@@ -161,8 +162,8 @@ class senertec(basesocketclient):
 
     def __get__(self, urlPath: str):
         url = self.AUTHENTICATION_HOST + urlPath
-        response = requests.get(
-            url, headers=self.__create_headers__(), cookies=self.__clientCookie__)
+        response = self.__session__.get(
+            url, headers=self.__create_headers__())
         if(response.status_code >= 400 and response.status_code <= 599):
             logger.error("Error in get request by function: {" + inspect.stack()
                          [1].function + "} HTTP response: " + response.text)
@@ -205,21 +206,45 @@ class senertec(basesocketclient):
 
     def login(self):
         """
-        Authenticate and get cookie.
+        Login.
 
         This function needs to be called first.
 
         Returns True on success, False on failure.
         """
         self.logger.info("Logging in..")
-        response = self.__post__("/rest/info/login", json.dumps(
-            {"user": self.email, "password": self.password}))
-        if response.status_code == 200:
-            self.__clientCookie__ = response.cookies
-            self.logger.debug("Login was successful.")
-            return True
-        else:
+        self.__session__ = requests.Session()
+        loginSSOResponse = self.__session__.get(
+            "https://dachsconnect.senertec.com/rest/saml2/login")
+
+        authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
+        head = {"Content-Type": "application/x-www-form-urlencoded"}
+        userData = f"username={self.email}&password={self.password}&{authState}"
+        # submit credentials
+        loginResponse = self.__session__.post("https://sso-portal.senertec.com/simplesaml/module.php/core/loginuserpass.php?",
+                                              data=userData, headers=head)
+
+        # filter out samlresponse and relaystate for ACS request
+        soup = BeautifulSoup(loginResponse.text, features="html.parser")
+        try:
+            samlResponse = soup.findAll(
+                "input", {"name": "SAMLResponse"})[0]["value"]
+            relayState = soup.findAll(
+                "input", {"name": "RelayState"})[0]["value"]
+        except IndexError:
+            self.logger.error("Login failed, username or password wrong.")
             return False
+        acsData = {'SAMLResponse': {samlResponse}, 'RelayState': {relayState}}
+
+        # do assertion consumer service request with received saml response
+        acs = self.__session__.post(
+            "https://dachsconnect.senertec.com/rest/saml2/acs", data=acsData, headers=head)
+
+        if acs.history[0].status_code != 302:
+            self.logger.error("Login failed at ACS request, got no redirect.")
+            return False
+        self.logger.info("Login was successful.")
+        return True
 
     def logout(self):
         """
@@ -230,6 +255,7 @@ class senertec(basesocketclient):
         self.logger.info("Logging out..")
         response = self.__get__("/logout")
         self.ws.close()
+        self.__session__.close()
         if response.status_code == 200:
             self.logger.debug("Logout was successful.")
             return True
