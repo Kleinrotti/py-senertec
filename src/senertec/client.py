@@ -254,7 +254,8 @@ class senertec(basesocketclient):
         """
         self.logger.info("Logging out..")
         response = self.__get__("/logout")
-        self.ws.close()
+        if self.ws:
+            self.ws.close()
         self.__session__.close()
         if response.status_code == 200:
             self.logger.debug("Logout was successful.")
