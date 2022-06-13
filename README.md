@@ -5,12 +5,13 @@
 
 ## Description
 
-The **py-senertec** library provides a way to communicate with senertec dachsportal2 to monitor your energy unit.
+The **py-senertec** library provides a way to communicate with Senertec Dachsportal2 to monitor your energy unit.
+This library supports read-only communication currently. So *changing* values for your energy unit isn't implemented.
 
 ## Requirements
 
 *   **Python 3.6+**
-*   **productGroups.json from [repo](https://github.com/Kleinrotti/py-senertec/blob/main/productGroups.json)**
+*   **productGroups.json included in this [repo](https://github.com/Kleinrotti/py-senertec/blob/main/productGroups.json)**
 *   **Account for Senertec Dachsportal2/Remeha KWK**
 
 ## Supported devices
@@ -18,12 +19,12 @@ The **py-senertec** library provides a way to communicate with senertec dachspor
 For now, these devices are supported:  
 *   Senertec Dachs 0.8
 *   Senertec Dachs Gen2 F5.5
-*   Remeha eLecta 300 (technically same as Senertec Dachs)
+*   Remeha eLecta 300 (technically same as Senertec Dachs 0.8)
 
 ## Support for other devices
 This library uses [Dachsportal2](https://dachsconnect.senertec.com/dachsportal2) to get information from your energy system.
 If you have a device which can be accessed from Dachsportal2 adding support should be pretty easy.
-You can open an feature request in the issues section and provide more information there.
+You can open a feature request in the issues section and provide more information there.
 
 ## Installation
 
@@ -68,7 +69,7 @@ senertec.logout()
 ### Using callback function
 
 Once the websocket has been started, data will be transmitted through the websocket.
-In order for your to be alerted of such a change, you need to add a callback which was done above.
+To get the websocket data, you need to add a callback which was done above.
 The callback function could look like this:
 
 ```python
