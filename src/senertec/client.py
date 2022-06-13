@@ -124,6 +124,7 @@ class senertec(basesocketclient):
             datefmt='%Y-%m-%d %H:%M:%S'
         )
         self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com"
+        self.SSO_HOST = "https://sso-portal.senertec.com"
         self.email = email
         self.__session__ = None
         self.language = language
@@ -216,13 +217,13 @@ class senertec(basesocketclient):
         self.logger.info("Logging in..")
         self.__session__ = requests.Session()
         loginSSOResponse = self.__session__.get(
-            "https://dachsconnect.senertec.com/rest/saml2/login")
+            self.AUTHENTICATION_HOST + "/rest/saml2/login")
 
         authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
         userData = f"username={self.email}&password={self.password}&{authState}"
         # submit credentials
-        loginResponse = self.__session__.post("https://sso-portal.senertec.com/simplesaml/module.php/core/loginuserpass.php?",
+        loginResponse = self.__session__.post(self.SSO_HOST + "/simplesaml/module.php/core/loginuserpass.php?",
                                               data=userData, headers=head)
 
         # filter out samlresponse and relaystate for ACS request
@@ -239,7 +240,7 @@ class senertec(basesocketclient):
 
         # do assertion consumer service request with received saml response
         acs = self.__session__.post(
-            "https://dachsconnect.senertec.com/rest/saml2/acs", data=acsData, headers=head)
+            self.AUTHENTICATION_HOST + "/rest/saml2/acs", data=acsData, headers=head)
 
         if acs.history[0].status_code != 302:
             self.logger.error("Login failed at ACS request, got no redirect.")
