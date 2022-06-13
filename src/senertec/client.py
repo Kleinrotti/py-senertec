@@ -174,6 +174,7 @@ class senertec(basesocketclient):
         metaData = self.__metaDataPoints__
         blist = []
         dataPointCount = 0
+        boardname = ""
         for a in metaData:
             for element in self.__supportedItems__[self.__connectedUnit__["productGroup"]]:
                 if metaData[a]["friendlyName"] == element:
