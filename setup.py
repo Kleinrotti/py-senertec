@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="py-senertec",
-    version="0.2.1",
+    version="0.2.2",
     author="Kleinrotti",
     author_email="",
     package_dir={"": "src"},
