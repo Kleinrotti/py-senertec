@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from unittest import TestCase
+from senertec.canipValue import canipValue
 from senertec.client import senertec
 
 
@@ -21,3 +22,6 @@ class TestBase(TestCase):
 
     def tearDown(self):
         self.senertec.logout()
+
+    def output(self, value: canipValue):
+        pass

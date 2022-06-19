@@ -11,7 +11,6 @@ class TestFunctions(TestBase):
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
         chart = self.senertec.getChart("ChartChpActivityFCEnduser")
-
         self.assertTrue(chart != None)
 
     def test_errors(self):
@@ -27,7 +26,7 @@ class TestFunctions(TestBase):
             l = points.getFullDataPointIds()
             response = self.senertec.request(l)
             self.assertTrue(response)
-        sleep(3)
+        sleep(4)
 
     def output(self, value: canipValue):
         print("Source: " + value.sourceDatapoint + "\nBoard: " +
