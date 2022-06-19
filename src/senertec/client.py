@@ -138,6 +138,7 @@ class senertec(basesocketclient):
         self.__enumTranslations__ = []
         self.__errorTranslations__ = []
         self.__connectedUnit__ = []
+        self.__appVersion__ = ""
         self.messagecallback = (canipValue())
         """Set your callback function to get the data values. Function has to be overloaded with data type ``canipValue``"""
         self.logger = logging.getLogger(__name__)
@@ -207,6 +208,14 @@ class senertec(basesocketclient):
         self.logger.debug(
             f"Parsing datapoints finished, found {len(blist)} boards with {dataPointCount} datapoints.")
 
+    @property
+    def portalVersion(self) -> str:
+        """Returns Senertec Dachsportal version.
+        
+        Init function has to be called first.
+        """
+        return self.__appVersion__
+    
     def login(self):
         """
         Login.
@@ -285,6 +294,7 @@ class senertec(basesocketclient):
             self.__metaDataTranslations__ = j["translations"][
                 f"{self.language.value}"]["metaDataPoints"]["translations"]
             self.__errorTranslations__ = j["translations"][f"{self.language.value}"]["errorCategories"]
+            self.__appVersion__ = j["app"]["version"]
             return True
         else:
             return False
