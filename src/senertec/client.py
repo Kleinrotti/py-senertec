@@ -211,11 +211,11 @@ class senertec(basesocketclient):
     @property
     def portalVersion(self) -> str:
         """Returns Senertec Dachsportal version.
-        
+
         Init function has to be called first.
         """
         return self.__appVersion__
-    
+
     def login(self):
         """
         Login.
@@ -314,6 +314,14 @@ class senertec(basesocketclient):
                 unit = energyUnit()
                 unit.model = x["benennung"]
                 unit.serial = x["seriennummer"]
+                unit.connected = x["connected"]
+                unit.online = x["online"]
+                unit.itemNumber = x["artikelNummer"]
+                unit.contact = x["standortAnsprech"]
+                unit.city = x["standortOrt"]
+                unit.locationName = x["standortName"]
+                unit.postalCode = x["standortPlz"]
+                unit.street = x["standortAdresse"]
                 units.append(unit)
             self.logger.debug(
                 f"Successful received a list of {len(units)} units.")
