@@ -1,4 +1,4 @@
-from tests.test_base import TestBase
+from test_base import TestBase
 
 
 class TestProperties(TestBase):

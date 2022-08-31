@@ -1,6 +1,6 @@
 from time import sleep
-from src.senertec.canipValue import canipValue
-from tests.test_base import TestBase
+from senertec.canipValue import canipValue
+from test_base import TestBase
 
 
 class TestFunctions(TestBase):
