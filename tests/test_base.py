@@ -2,8 +2,8 @@ import json
 import logging
 import os
 from unittest import TestCase
-from senertec.canipValue import canipValue
-from senertec.client import senertec
+from src.senertec.canipValue import canipValue
+from src.senertec.client import senertec
 
 
 class TestBase(TestCase):
