@@ -6,12 +6,12 @@ from threading import Thread
 import requests
 import websocket
 from bs4 import BeautifulSoup
-from senertec.energyUnit import energyUnit
-from senertec.lang import lang
-from senertec.canipError import canipError
-from senertec.canipValue import canipValue
-from senertec.board import board
-from senertec.datapoint import datapoint
+from .energyUnit import energyUnit
+from .lang import lang
+from .canipError import canipError
+from .canipValue import canipValue
+from .board import board
+from .datapoint import datapoint
 
 
 class basesocketclient:
@@ -63,7 +63,6 @@ class basesocketclient:
                                 value.dataUnit = ""
                             self.messagecallback(value)
                             break
-        # reconnect
         elif action == "HkaStore" and data["updateType"] == "remove":
             sn = j["sn"]
             self.logger.info(
@@ -107,16 +106,16 @@ class basesocketclient:
 class senertec(basesocketclient):
     """Class to communicate with Senertec and handle network calls"""
 
-    def __init__(self, dataNames=None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
+    def __init__(self, datapointList=None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
 
-        ``dataNames`` Json string of the productGroups.json file.
+        ``datapointList`` Json string of the productGroups.json file to add only these datapoints instead of everything.
 
         ``language`` Set to your language.
         """
-        if email is None or password is None or dataNames is None:
+        if email is None or password is None:
             raise ValueError(
-                "Arguments 'email', 'passwords', dataNames are required"
+                "Arguments 'email', 'passwords'"
             )
         super().__init__(level)
         logging.basicConfig(
@@ -131,7 +130,7 @@ class senertec(basesocketclient):
         self.language = language
         self.password = password
         self.level = level
-        self.__supportedItems__ = dataNames
+        self.__supportedItems__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
         self.__metaDataTranslations__ = []
@@ -158,7 +157,7 @@ class senertec(basesocketclient):
         url = self.AUTHENTICATION_HOST + urlPath
         response = self.__session__.post(
             url, data=payload, headers=self.__create_headers__())
-        if(response.status_code >= 400 and response.status_code <= 599):
+        if (response.status_code >= 400 and response.status_code <= 599):
             logger.error("Error in post request by function: " + inspect.stack()
                          [1].function + " HTTP response: " + response.text)
         return response
@@ -167,12 +166,53 @@ class senertec(basesocketclient):
         url = self.AUTHENTICATION_HOST + urlPath
         response = self.__session__.get(
             url, headers=self.__create_headers__())
-        if(response.status_code >= 400 and response.status_code <= 599):
+        if (response.status_code >= 400 and response.status_code <= 599):
             logger.error("Error in get request by function: {" + inspect.stack()
                          [1].function + "} HTTP response: " + response.text)
         return response
 
-    def __parsedatapoints__(self):
+    def __parseDataPoints__(self):
+        """Parse all available datapoints for connected unit."""
+        self.logger.debug("Starting to parse datapoints..")
+        dataPointCount = 0
+        metaData = self.__metaDataPoints__
+        allPoints = []
+        boardList = []
+
+        # first collect all available datapoints
+        for point in metaData:
+            if metaData[point]["friendlyName"] is not None:
+                datap = datapoint()
+                datap.sourceId = metaData[point]["friendlyName"]
+                datap.friendlyName = self.__metaDataTranslations__[
+                    metaData[point]["name"]]
+                datap.id = metaData[point]["name"]
+                datap.gain = metaData[point]["gain"]
+                datap.unit = metaData[point]["unit"]
+                datap.enumName = metaData[point]["enumName"]
+                allPoints.append(datap)
+                # loop through all boards of unit
+                for b in self.__connectedUnit__["boards"]:
+                    # add board to the collection if its not already included
+                    if not any(x for x in boardList if x.boardName == b["name"]):
+                        device = board()
+                        device.boardName = b["name"]
+                        boardList.append(device)
+                    # loop through datapoints of that board and add available points
+                    for at in b["attributes"]:
+                        if at == datap.id:
+                            for b1 in boardList:
+                                if b1.boardName == b["name"]:
+                                    dataPointCount += 1
+                                    b1.datapoints.append(datap)
+                            break
+        self.logger.debug(
+            f"Finished datapoints parsing. Found {len(boardList)} boards with {dataPointCount} datapoints in total.")
+        self.boards = boardList
+        return
+
+    def __parseDataPointsFiltered__(self):
+        """Use this function to include only datapoints of supportedItems which was set in class constructor."""
         self.logger.debug("Starting to parse datapoints..")
         metaData = self.__metaDataPoints__
         blist = []
@@ -206,7 +246,7 @@ class senertec(basesocketclient):
                                 b.datapoints.append(datap)
         self.boards = blist
         self.logger.debug(
-            f"Parsing datapoints finished, found {len(blist)} boards with {dataPointCount} datapoints.")
+            f"Finished datapoints parsing. Found {len(blist)} boards with {dataPointCount} datapoints in total.")
 
     @property
     def portalVersion(self) -> str:
@@ -342,7 +382,11 @@ class senertec(basesocketclient):
         response = self.__get__(f"/rest/canip/{serial}")
         if response.status_code == 200:
             self.__connectedUnit__ = json.loads(response.text)
-            self.__parsedatapoints__()
+            # if no supported items were set in constructor, do not filter and parse every datapoint
+            if self.__supportedItems__ is None:
+                self.__parseDataPoints__()
+            else:
+                self.__parseDataPointsFiltered__()
             return True
         else:
             return False
