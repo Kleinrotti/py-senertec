@@ -6,25 +6,20 @@
 ## Description
 
 The **py-senertec** library provides a way to communicate with Senertec Dachsportal2 to monitor your energy unit.
-This library supports read-only communication currently. So *changing* values for your energy unit isn't implemented.
+This library supports read-only communication. So *changing* values for your energy unit isn't implemented and not planned yet.
 
 ## Requirements
 
 *   **Python 3.6+**
-*   **productGroups.json included in this [repo](https://github.com/Kleinrotti/py-senertec/blob/main/productGroups.json)**
 *   **Account for Senertec Dachsportal2/Remeha KWK**
 
-## Supported devices
+## Tested with this devices
 
-For now, these devices are supported:  
+I could test with this devices but others should also work:  
 *   Senertec Dachs 0.8
 *   Senertec Dachs Gen2 F5.5
 *   Remeha eLecta 300 (technically same as Senertec Dachs 0.8)
 
-## Support for other devices
-This library uses [Dachsportal2](https://dachsconnect.senertec.com/dachsportal2) to get information from your energy system.
-If you have a device which can be accessed from Dachsportal2 adding support should be pretty easy.
-You can open a feature request in the issues section and provide more information there.
 
 ## Installation
 
@@ -42,11 +37,8 @@ from senertec.canipValue import canipValue
 import json
 import os
 
-# holds the datapoints which are fixed values parsed from Dachsportal
-file = open(os.getcwd() + "\\productGroups.json")
-supportedItems = json.load(file)
-file.close()
-senertec = senertec(supportedItems, "username", "password")
+#this example uses no filtering, read below how to use a filter instead of None as first parameter.
+senertec = senertec(None, "username", "password")
 #set your callback function for messages
 senertec.messagecallback = self.output
 senertec.login()
@@ -80,9 +72,19 @@ def output(self, value: canipValue):
 
 ### Errors of energy unit
 Errors can also be read out with a simple function.
-The errors are read out on the connect function and only will be refreshed on a reconnect.
+The errors are read out on the connect function and will only be refreshed on a reconnect.
 
 ```python
 # values are returned directly from function
-k = senertec.getErrors()
+errors = senertec.getErrors()
 ```
+
+A full example can be found [here](https://github.com/Kleinrotti/py-senertec/blob/main/examples/output_data.py)
+
+## Filtering (recommended)
+If you specify a json string in the senertec contructor you can limit what datapoints should be received.
+This is pretty usefull if you know what data you want from your heating system e.g. power, temperature.
+By default all datapoints are included which are more than 400 in most cases and receiving them takes some time.
+This json string should look like [this](https://github.com/Kleinrotti/py-senertec/blob/main/examples/datapointFilter.json).
+The json string contains the productGroup at the top and below the datapoints which should be included.
+You get the productGroup from the getUnits() function.
