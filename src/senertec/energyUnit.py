@@ -22,3 +22,4 @@ class energyUnit(object):
         """Post code where the unit is located."""
         self.locationName = str()
         """Location name of the unit."""
+        self.productGroup = str()
