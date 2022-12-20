@@ -109,7 +109,7 @@ class senertec(basesocketclient):
     def __init__(self, datapointList=None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
 
-        ``datapointList`` Json string of the productGroups.json file to add only these datapoints instead of everything.
+        ``datapointList`` Json string to add only these datapoints instead of everything.
 
         ``language`` Set to your language.
         """
@@ -130,7 +130,7 @@ class senertec(basesocketclient):
         self.language = language
         self.password = password
         self.level = level
-        self.__supportedItems__ = datapointList
+        self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
         self.__metaDataTranslations__ = []
@@ -212,14 +212,14 @@ class senertec(basesocketclient):
         return
 
     def __parseDataPointsFiltered__(self):
-        """Use this function to include only datapoints of supportedItems which was set in class constructor."""
+        """Use this function to include only datapoints of datapointList which was set in class constructor."""
         self.logger.debug("Starting to parse datapoints..")
         metaData = self.__metaDataPoints__
         blist = []
         dataPointCount = 0
         boardname = ""
         for a in metaData:
-            for element in self.__supportedItems__[self.__connectedUnit__["productGroup"]]:
+            for element in self.__filteredDatapoints__[self.__connectedUnit__["productGroup"]]:
                 if metaData[a]["friendlyName"] == element:
                     for l in self.__connectedUnit__["boards"]:
                         for o in l["attributes"]:
@@ -343,7 +343,7 @@ class senertec(basesocketclient):
         """
         Get all units.
 
-        Returns all senertec products of this account as list.
+        Returns all energy units of this account as object list.
         """
         response = self.__post__(
             "/rest/info/units", json.dumps({"limit": 10, "offset": 0, "filter": {}}))
@@ -371,8 +371,6 @@ class senertec(basesocketclient):
 
     def connectUnit(self, serial: str):
         """
-        Connect to a unit.
-
         This function connects to a unit and enables receiving data for that unit.
 
         ``serial`` Serial number of energy unit. Can be received with getUnits() method.
@@ -383,7 +381,7 @@ class senertec(basesocketclient):
         if response.status_code == 200:
             self.__connectedUnit__ = json.loads(response.text)
             # if no supported items were set in constructor, do not filter and parse every datapoint
-            if self.__supportedItems__ is None:
+            if self.__filteredDatapoints__ is None:
                 self.__parseDataPoints__()
             else:
                 self.__parseDataPointsFiltered__()
@@ -394,8 +392,6 @@ class senertec(basesocketclient):
     def disconnectUnit(self):
         """
         Disconnect from a unit.
-
-        This function disconnects from a unit.
 
         Returns True on success, False on failure.
         """
@@ -419,7 +415,7 @@ class senertec(basesocketclient):
 
     def request(self, dataPoints: list):
         """
-        Request data from specific data points of the connected unit.
+        Request data from specific datapoints of the connected unit.
 
         Data wil be received through websocket.
 
@@ -446,7 +442,9 @@ class senertec(basesocketclient):
         return lst
 
     def getErrors(self, onlyCurrentErrors: bool = True) -> list[canipError]:
-        """Get an error history of the connected unit. 
+        """Get an error history of the connected unit.
+
+        ``onlyCurrentErrors`` Return only errors which are present now. Set to false if you want error history.
 
         This gets loaded when a unit gets connected."""
         lst = []
