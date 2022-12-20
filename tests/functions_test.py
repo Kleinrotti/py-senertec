@@ -1,6 +1,6 @@
 from time import sleep
-from senertec.canipValue import canipValue
 from test_base import TestBase
+from src.senertec.canipValue import canipValue
 
 
 class TestFunctions(TestBase):
@@ -26,7 +26,7 @@ class TestFunctions(TestBase):
             l = points.getFullDataPointIds()
             response = self.senertec.request(l)
             self.assertTrue(response)
-        sleep(4)
+        sleep(5)
 
     def output(self, value: canipValue):
         print("Source: " + value.sourceDatapoint + "\nBoard: " +

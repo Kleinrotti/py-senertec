@@ -1,4 +1,4 @@
-from senertec.datapoint import datapoint
+from .datapoint import datapoint
 
 
 class board(object):

@@ -4,8 +4,8 @@ import os
 import unittest
 from teamcity import is_running_under_teamcity
 from teamcity.unittestpy import TeamcityTestRunner
-from senertec.canipValue import canipValue
-from senertec.client import senertec
+from src.senertec.canipValue import canipValue
+from src.senertec.client import senertec
 
 
 class TestBase(unittest.TestCase):
@@ -13,11 +13,10 @@ class TestBase(unittest.TestCase):
         super().__init__(methodName=methodName)
 
     def setUp(self):
-        file = open(os.getcwd() + "\\productGroups.json")
-        supportedItems = json.load(file)
-        file.close()
-        self.senertec = senertec(supportedItems,
-                                 os.environ['SENERTECUSER'], os.environ['SENERTECPW'], level=logging.DEBUG)
+        #file = open(os.getcwd() + "\\productGroups.json")
+        #supportedItems = json.load(file)
+        #file.close()
+        self.senertec = senertec(None,os.environ['SENERTECUSER'], os.environ['SENERTECPW'], level=logging.DEBUG)
         self.senertec.login()
         self.senertec.init()
         self.senertec.messagecallback = self.output
