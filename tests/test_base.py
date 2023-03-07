@@ -2,8 +2,6 @@ import json
 import logging
 import os
 import unittest
-from teamcity import is_running_under_teamcity
-from teamcity.unittestpy import TeamcityTestRunner
 from src.senertec.canipValue import canipValue
 from src.senertec.client import senertec
 
@@ -27,9 +25,3 @@ class TestBase(unittest.TestCase):
     def output(self, value: canipValue):
         pass
 
-if __name__ == '__main__':
-    if is_running_under_teamcity():
-        runner = TeamcityTestRunner()
-    else:
-        runner = unittest.TextTestRunner()
-    unittest.main(testRunner=runner)
