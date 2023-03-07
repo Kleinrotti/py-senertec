@@ -26,9 +26,5 @@ class TestFunctions(TestBase):
             l = points.getFullDataPointIds()
             response = self.senertec.request(l)
             self.assertTrue(response)
-        sleep(5)
-
-    def output(self, value: canipValue):
-        print("Source: " + value.sourceDatapoint + "\nBoard: " +
-              value.boardName + "\nName: " + value.friendlyDataName + "\nValue: " +
-              value.dataValue.__str__() + value.dataUnit + "\n")
+        sleep(10)
+        self.assertTrue(self.out.call_count > 20)
