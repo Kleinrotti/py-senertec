@@ -14,7 +14,7 @@ class TestBase(unittest.TestCase):
         #file = open(os.getcwd() + "\\productGroups.json")
         #supportedItems = json.load(file)
         #file.close()
-        self.senertec = senertec(None,os.environ['SENERTECUSER'], os.environ['SENERTECPW'], level=logging.DEBUG)
+        self.senertec = senertec(None,os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
         self.senertec.login()
         self.senertec.init()
         self.senertec.messagecallback = self.output
