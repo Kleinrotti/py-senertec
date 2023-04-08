@@ -88,3 +88,7 @@ By default all datapoints are included which are more than 400 in most cases and
 This json string should look like [this](https://github.com/Kleinrotti/py-senertec/blob/main/examples/datapointFilter.json).
 The json string contains the productGroup at the top and below the datapoints which should be included.
 You get the productGroup from the getUnits() function.
+
+## What are these datapoints?
+Take a look at this manual from [Remeha](https://mediacdn.remeha.de/-/media/websites/remehade/downloads/produkte/regenerative-hybrid/gas-hybrid-waerme-und-strom/electa-ace-300/electaace300_bedienungsanleitung_02-23.pdf?v=1&d=20230228T114400Z) (Page 39).
+There is already a good explanation of how these datapoints are composed.
