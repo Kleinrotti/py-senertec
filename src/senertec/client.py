@@ -204,6 +204,8 @@ class senertec(basesocketclient):
                 datap.gain = metaData[point]["gain"]
                 datap.unit = metaData[point]["unit"]
                 datap.enumName = metaData[point]["enumName"]
+                datap.array = metaData[point]["array"]
+                datap.type = obdClass(metaData[point]["obdClass"])
                 allPoints.append(datap)
                 # loop through all boards of unit
                 for b in self.__connectedUnit__["boards"]:
