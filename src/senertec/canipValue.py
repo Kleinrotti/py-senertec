@@ -13,3 +13,7 @@ class canipValue(object):
         """Human readable data value name."""
         self.sourceDatapoint = str()
         """Id of datapoint which was requested."""
+        self.array = bool()
+        """Indicates if this canipValue is part of an array."""
+        self.deviceSerial = str()
+        """The serial of the device this canipValue belongs to."""
