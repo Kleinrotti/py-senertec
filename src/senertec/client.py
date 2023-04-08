@@ -6,6 +6,8 @@ from threading import Thread
 import requests
 import websocket
 from bs4 import BeautifulSoup
+
+from .obdClass import obdClass
 from .energyUnit import energyUnit
 from .lang import lang
 from .canipError import canipError
@@ -34,14 +36,26 @@ class basesocketclient:
         data = j["data"]
         if action == "CanipValue":
             self.logger.debug("Received new CanipValue from websocket.")
+            # skip old values and array size indicators
+            if (data["age"] != 0 or data["size"] == True):
+                return
             for b in self.boards:
                 if b.boardName == data["boardName"]:
                     value = canipValue()
                     value.boardName = b.boardName
+                    value.array = data["array"]
+                    value.deviceSerial = data["sn"]
                     for point in b.datapoints:
                         if point.id == data["dataPointName"]:
-                            value.friendlyDataName = point.friendlyName
-                            value.sourceDatapoint = point.sourceId
+                            #if the data is an array, add the index to the name
+                            if (data["index"] != None):
+                                value.friendlyDataName = point.friendlyName + \
+                                    " " + data["index"].__str__()
+                                value.sourceDatapoint = point.sourceId + \
+                                    "_" + data["index"].__str__()
+                            else:
+                                value.friendlyDataName = point.friendlyName
+                                value.sourceDatapoint = point.sourceId
                             tempValue = data["value"]
                             if point.enumName != None:
                                 for enum in self.__enumTranslations__:
@@ -52,9 +66,9 @@ class basesocketclient:
                                             self.logger.warning(
                                                 f"No enum translation found for datapoint '{point.friendlyName}'.")
                                             value.dataValue = "Unknown"
-                            elif point.gain != 0 and point.gain != 1:
-                                value.dataValue = tempValue * \
-                                    point.gain
+                            elif point.gain != 0:
+                                value.dataValue = round(tempValue *
+                                                        point.gain, 2)
                             else:
                                 value.dataValue = tempValue
                             if point.unit != None:
@@ -190,6 +204,8 @@ class senertec(basesocketclient):
                 datap.gain = metaData[point]["gain"]
                 datap.unit = metaData[point]["unit"]
                 datap.enumName = metaData[point]["enumName"]
+                datap.array = metaData[point]["array"]
+                datap.type = obdClass(metaData[point]["obdClass"])
                 allPoints.append(datap)
                 # loop through all boards of unit
                 for b in self.__connectedUnit__["boards"]:
@@ -233,6 +249,8 @@ class senertec(basesocketclient):
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
                     datap.enumName = metaData[a]["enumName"]
+                    datap.array = metaData[a]["array"]
+                    datap.type = obdClass(metaData[a]["obdClass"])
                     dataPointCount += 1
                     # avoid doubled board entries
                     if not any(x for x in blist if x.boardName == boardname):
