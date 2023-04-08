@@ -17,7 +17,7 @@ This library supports read-only communication. So *changing* values for your ene
 
 I could test with this devices but others should also work:  
 *   Senertec Dachs 0.8
-*   Senertec InnoGen
+*   Senertec Dachs InnoGen
 *   Senertec Dachs Gen2 F5.5
 *   Remeha eLecta 300 (technically same as Senertec Dachs 0.8)
 
