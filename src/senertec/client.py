@@ -40,8 +40,15 @@ class basesocketclient:
                     value.boardName = b.boardName
                     for point in b.datapoints:
                         if point.id == data["dataPointName"]:
-                            value.friendlyDataName = point.friendlyName
-                            value.sourceDatapoint = point.sourceId
+                            #if the data is an array, add the index to the name
+                            if (data["index"] != None):
+                                value.friendlyDataName = point.friendlyName + \
+                                    " " + data["index"].__str__()
+                                value.sourceDatapoint = point.sourceId + \
+                                    "_" + data["index"].__str__()
+                            else:
+                                value.friendlyDataName = point.friendlyName
+                                value.sourceDatapoint = point.sourceId
                             tempValue = data["value"]
                             if point.enumName != None:
                                 for enum in self.__enumTranslations__:
