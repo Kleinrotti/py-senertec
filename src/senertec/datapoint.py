@@ -17,6 +17,6 @@ class datapoint(object):
         self.enumName = str()
         """If the datapoint is an enum, this value is set."""
         self.type = obdClass
-        """The datapoint odbClass."""
+        """The datapoint obdClass."""
         self.array = bool
         """Indicates if this datapoint is an array."""
