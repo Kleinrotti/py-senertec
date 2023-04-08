@@ -38,6 +38,8 @@ class basesocketclient:
                 if b.boardName == data["boardName"]:
                     value = canipValue()
                     value.boardName = b.boardName
+                    value.array = data["array"]
+                    value.deviceSerial = data["sn"]
                     for point in b.datapoints:
                         if point.id == data["dataPointName"]:
                             #if the data is an array, add the index to the name
