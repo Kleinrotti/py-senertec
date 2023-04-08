@@ -1,3 +1,6 @@
+from .obdClass import obdClass
+
+
 class datapoint(object):
     """Represents a datapoint of a board."""
     def __init__(self):
@@ -13,3 +16,7 @@ class datapoint(object):
         """Scaling of interger or float values."""
         self.enumName = str()
         """If the datapoint is an enum, this value is set."""
+        self.type = obdClass
+        """The datapoint odbClass."""
+        self.array = bool
+        """Indicates if this datapoint is an array."""

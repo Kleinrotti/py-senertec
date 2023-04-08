@@ -6,6 +6,8 @@ from threading import Thread
 import requests
 import websocket
 from bs4 import BeautifulSoup
+
+from .obdClass import obdClass
 from .energyUnit import energyUnit
 from .lang import lang
 from .canipError import canipError
@@ -245,6 +247,8 @@ class senertec(basesocketclient):
                     datap.unit = metaData[a]["unit"]
                     datap.gain = metaData[a]["gain"]
                     datap.enumName = metaData[a]["enumName"]
+                    datap.array = metaData[a]["array"]
+                    datap.type = obdClass(metaData[a]["obdClass"])
                     dataPointCount += 1
                     # avoid doubled board entries
                     if not any(x for x in blist if x.boardName == boardname):
