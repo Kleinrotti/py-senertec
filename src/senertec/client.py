@@ -34,6 +34,9 @@ class basesocketclient:
         data = j["data"]
         if action == "CanipValue":
             self.logger.debug("Received new CanipValue from websocket.")
+            # skip old values and array size indicators
+            if (data["age"] != 0 or data["size"] == True):
+                return
             for b in self.boards:
                 if b.boardName == data["boardName"]:
                     value = canipValue()
