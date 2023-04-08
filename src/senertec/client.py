@@ -64,9 +64,9 @@ class basesocketclient:
                                             self.logger.warning(
                                                 f"No enum translation found for datapoint '{point.friendlyName}'.")
                                             value.dataValue = "Unknown"
-                            elif point.gain != 0 and point.gain != 1:
-                                value.dataValue = tempValue * \
-                                    point.gain
+                            elif point.gain != 0:
+                                value.dataValue = round(tempValue *
+                                                        point.gain, 2)
                             else:
                                 value.dataValue = tempValue
                             if point.unit != None:
