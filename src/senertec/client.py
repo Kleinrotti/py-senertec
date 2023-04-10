@@ -212,7 +212,7 @@ class senertec(basesocketclient):
                     # add board to the collection if its not already included
                     if not any(x for x in boardList if x.boardName == b["name"]):
                         device = board()
-                        device.boardName = b["name"]
+                        device.__boardName__ = b["name"]
                         boardList.append(device)
                     # loop through datapoints of that board and add available points
                     for at in b["attributes"]:
@@ -220,7 +220,7 @@ class senertec(basesocketclient):
                             for b1 in boardList:
                                 if b1.boardName == b["name"]:
                                     dataPointCount += 1
-                                    b1.datapoints.append(datap)
+                                    b1.__datapoints__.append(datap)
                             break
         self.logger.debug(
             f"Finished datapoints parsing. Found {len(boardList)} boards with {dataPointCount} datapoints in total.")
@@ -255,13 +255,13 @@ class senertec(basesocketclient):
                     # avoid doubled board entries
                     if not any(x for x in blist if x.boardName == boardname):
                         b = board()
-                        b.boardName = boardname
-                        b.datapoints.append(datap)
+                        b.__boardName__ = boardname
+                        b.__datapoints__.append(datap)
                         blist.append(b)
                     else:
                         for b in blist:
                             if b.boardName == boardname:
-                                b.datapoints.append(datap)
+                                b.__datapoints__.append(datap)
         self.boards = blist
         self.logger.debug(
             f"Finished datapoints parsing. Found {len(blist)} boards with {dataPointCount} datapoints in total.")
