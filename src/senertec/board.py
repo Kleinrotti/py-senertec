@@ -45,7 +45,7 @@ class board(object):
         Returns the full datapoint as string or None if not found.
         """
         for point in self.__datapoints__:
-            if name.lower() in point.friendlyName.lower():
+            if name.lower() in point.sourceId.lower():
                 return self.__boardName__ + "." + point.id
 
     def getDatapointByName(self, name: str):
