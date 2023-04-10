@@ -7,7 +7,7 @@ class datapoint(object):
         self.id = str()
         """Unique datapoint id. This id is random and changes every session."""
         self.sourceId = str()
-        """Id of datapoint from productGroups."""
+        """Name of the datapoint e.g. BM001."""
         self.friendlyName = str()
         """Human readable name of the datapoint."""
         self.unit = str()
