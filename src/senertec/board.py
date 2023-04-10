@@ -4,9 +4,9 @@ from .datapoint import datapoint
 class board(object):
     """Represents an electronic board of the energy unit."""
     def __init__(self):
-        self.boardName = str()
+        self.__boardName__ = str()
         """Name of the board."""
-        self.friendlyName = str()
+        self.__friendlyName__ = str()
         """Human readable name of the board."""
         self.__datapoints__ = [datapoint()]
         """Stores datapoints of the board."""
@@ -21,10 +21,20 @@ class board(object):
     def datapoints(self):
         """Returns all datapoints."""
         return self.__datapoints__
+    
+    @property
+    def boardName(self):
+        """Return the board name."""
+        return self.__boardName__
+    
+    @property
+    def friendlyName(self):
+        """Return the human readable name of the board."""
+        return self.__friendlyName__
 
     def getFullDatapoint(self, index: int):
         """Get the full datapoint string."""
-        return self.boardName + "." + self.__datapoints__[index]
+        return self.__boardName__ + "." + self.__datapoints__[index]
 
     def getFullDatapointIdByName(self, name: str):
         """
@@ -36,7 +46,7 @@ class board(object):
         """
         for point in self.__datapoints__:
             if name.lower() in point.friendlyName.lower():
-                return self.boardName + "." + point.id
+                return self.__boardName__ + "." + point.id
 
     def getDatapointByName(self, name: str):
         """
@@ -57,5 +67,5 @@ class board(object):
         """
         lst = []
         for i in self.__datapoints__:
-            lst.append(self.boardName + "." + i.id)
+            lst.append(self.__boardName__ + "." + i.id)
         return lst
