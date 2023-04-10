@@ -472,16 +472,16 @@ class senertec(basesocketclient):
                 if onlyCurrentErrors and not e["currentError"]:
                     continue
                 error = canipError()
-                error.boardName = e["boardName"]
-                error.code = e["codeText"]
-                error.counter = e["counter"]
-                error.currentError = e["currentError"]
-                error.timestamp = e["timestamp"]
+                error.__boardName__ = e["boardName"]
+                error.__code__ = e["codeText"]
+                error.__counter__ = e["counter"]
+                error.__currentError__ = e["currentError"]
+                error.__timestamp__ = e["timestamp"]
                 cat = e["errorCode"]["category"]
                 code = e["errorCode"]["code"]
-                error.errorCategory = self.__errorTranslations__[
+                error.__errorCategory__ = self.__errorTranslations__[
                     f"{cat}"]["translationMedium"]
-                error.errorTranslation = self.__errorTranslations__[
+                error.__errorTranslation__ = self.__errorTranslations__[
                     f"{cat}"]["translations"][f"{code}"]
                 lst.append(error)
         return lst
