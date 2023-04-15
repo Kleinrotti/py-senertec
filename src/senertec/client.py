@@ -138,10 +138,10 @@ class senertec(basesocketclient):
         )
         self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com"
         self.SSO_HOST = "https://sso-portal.senertec.com"
-        self.email = email
+        self.__email__ = email
         self.__session__ = None
         self.__language__ = language
-        self.password = password
+        self.__password__ = password
         self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
@@ -306,7 +306,7 @@ class senertec(basesocketclient):
 
         authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
-        userData = f"username={self.email}&password={self.password}&{authState}"
+        userData = f"username={self.__email__}&password={self.__password__}&{authState}"
         # submit credentials
         loginResponse = self.__session__.post(self.SSO_HOST + "/simplesaml/module.php/core/loginuserpass.php?",
                                               data=userData, headers=head)
