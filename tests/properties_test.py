@@ -1,6 +1,7 @@
 from test_base_test import TestBase
 from datetime import datetime, timezone
 from src.senertec.canipError import canipError
+from src.senertec.lang import lang
 
 class TestProperties(TestBase):
     def __init__(self, methodName: str = ...) -> None:
@@ -14,3 +15,8 @@ class TestProperties(TestBase):
         error = canipError()
         error.__timestamp__ = "1642621405300"
         self.assertEqual(error.timestamp, datetime(2022, 1, 19, 19, 43, 25, 300000, tzinfo=timezone.utc))
+    
+    def test_language(self):
+        self.assertEqual(self.senertec.__language__, lang.English)
+        self.senertec.language = lang.German
+        self.assertEqual(self.senertec.__language__, lang.German)

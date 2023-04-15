@@ -140,7 +140,7 @@ class senertec(basesocketclient):
         self.SSO_HOST = "https://sso-portal.senertec.com"
         self.email = email
         self.__session__ = None
-        self.language = language
+        self.__language__ = language
         self.password = password
         self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
@@ -164,6 +164,15 @@ class senertec(basesocketclient):
     def loglevel(self):
         """Return the log level."""
         return self.__logger__.level
+    
+    @property
+    def language(self):
+        """Return or set the language used for sensor names."""
+        return self.__language__
+    
+    @language.setter
+    def language(self, value: lang):
+        self.__language__ = value
 
     def __create_headers__(self):
         headers = {"Content-Type": "application/json"}
@@ -356,10 +365,10 @@ class senertec(basesocketclient):
             j = json.loads(response.text)
             self.__metaDataPoints__ = j["metaDataPoints"]
             self.__enums__ = j["enums"]
-            self.__enumTranslations__ = j["translations"][f"{self.language.value}"]["enums"]
+            self.__enumTranslations__ = j["translations"][f"{self.__language__.value}"]["enums"]
             self.__metaDataTranslations__ = j["translations"][
-                f"{self.language.value}"]["metaDataPoints"]["translations"]
-            self.__errorTranslations__ = j["translations"][f"{self.language.value}"]["errorCategories"]
+                f"{self.__language__.value}"]["metaDataPoints"]["translations"]
+            self.__errorTranslations__ = j["translations"][f"{self.__language__.value}"]["errorCategories"]
             self.__appVersion__ = j["app"]["version"]
             return True
         else:
