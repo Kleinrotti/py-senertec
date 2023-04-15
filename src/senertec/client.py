@@ -142,7 +142,6 @@ class senertec(basesocketclient):
         self.__session__ = None
         self.language = language
         self.password = password
-        self.level = level
         self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
@@ -160,6 +159,11 @@ class senertec(basesocketclient):
     def boards(self) -> list[board]:
         """Return all boards."""
         return self.__boards__
+    
+    @property
+    def loglevel(self):
+        """Return the log level."""
+        return self.logger.level
 
     def __create_headers__(self):
         headers = {"Content-Type": "application/json"}
