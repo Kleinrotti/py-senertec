@@ -12,12 +12,12 @@ class TestBase(unittest.TestCase):
         super().__init__(methodName=methodName)
 
     def setUp(self):
-        # file = open(os.getcwd() + "\\productGroups.json")
-        # supportedItems = json.load(file)
-        # file.close()
-        self.senertec = senertec(
-            None, os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
-        self.senertec.login()
+        file = open(os.getcwd() + "\\examples\\datapointFilter.json")
+        supportedItems = json.load(file)
+        file.close()
+        self.senertec = senertec(supportedItems)
+        self.senertec.login(
+            os.environ['SENERTECUSER'], os.environ['SENERTECPW'])
         self.senertec.init()
         self.out = Mock()
         self.senertec.messagecallback = self.out
