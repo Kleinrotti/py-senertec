@@ -6,7 +6,6 @@ from threading import Thread
 import requests
 import websocket
 from bs4 import BeautifulSoup
-
 from .obdClass import obdClass
 from .energyUnit import energyUnit
 from .lang import lang
@@ -432,17 +431,19 @@ class senertec(basesocketclient):
         if response.status_code == 200:
             return json.loads(response.text)
 
-    def request(self, dataPoints: list):
+    def request(self, dataPoints: list | str):
         """
         Request data from specific datapoints of the connected unit.
 
-        Data wil be received through websocket.
+        Data will be received through websocket.
 
-        ``dataPoints`` List of datapoint strings
+        ``dataPoints`` List of datapoint strings or a single datapoint as string.
 
         Returns True on success, False on failure.
         """
         sn = self.__connectedUnit__["seriennummer"]
+        if(type(dataPoints) == str):
+            dataPoints = dataPoints.split()
         j = json.dumps(
             {"seriennummer": sn, "keys": dataPoints})
         response = self.__post__(
