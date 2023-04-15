@@ -26,7 +26,7 @@ class basesocketclient:
         self.__messages__ = [str()]
         self.__thread__ = None
         self.ws = None
-        self.boards = [board()]
+        self.__boards__ = [board()]
         """All available boards with datapoints which can be used in request function"""
 
     def __on_message__(self, ws, message):
@@ -38,7 +38,7 @@ class basesocketclient:
             # skip old values and array size indicators
             if (data["age"] != 0 or data["size"] == True):
                 return
-            for b in self.boards:
+            for b in self.__boards__:
                 if b.boardName == data["boardName"]:
                     value = canipValue()
                     value.boardName = b.boardName
@@ -156,6 +156,11 @@ class senertec(basesocketclient):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
 
+    @property
+    def boards(self) -> list[board]:
+        """Return all boards."""
+        return self.__boards__
+
     def __create_headers__(self):
         headers = {"Content-Type": "application/json"}
         return headers
@@ -223,7 +228,7 @@ class senertec(basesocketclient):
                             break
         self.logger.debug(
             f"Finished datapoints parsing. Found {len(boardList)} boards with {dataPointCount} datapoints in total.")
-        self.boards = boardList
+        self.__boards__ = boardList
         return
 
     def __parseDataPointsFiltered__(self):
@@ -261,7 +266,7 @@ class senertec(basesocketclient):
                         for b in blist:
                             if b.boardName == boardname:
                                 b.__datapoints__.append(datap)
-        self.boards = blist
+        self.__boards__ = blist
         self.logger.debug(
             f"Finished datapoints parsing. Found {len(blist)} boards with {dataPointCount} datapoints in total.")
 
