@@ -25,7 +25,7 @@ class basesocketclient:
         self.__is_ws_connected__ = False
         self.__messages__ = [str()]
         self.__thread__ = None
-        self.ws = None
+        self.__ws__ = None
         self.__boards__ = [board()]
         """All available boards with datapoints which can be used in request function"""
 
@@ -100,14 +100,14 @@ class basesocketclient:
         cookies = self.__getCookies__(
             self.__session__.cookies, "dachsconnect.senertec.com")
         self.logger.debug("Creating websocket connection..")
-        self.ws = websocket.WebSocketApp(self.WS_HOST,
+        self.__ws__ = websocket.WebSocketApp(self.WS_HOST,
                                          on_message=self.__on_message__,
                                          on_error=self.__on_error__,
                                          on_close=self.__on_close__,
                                          on_open=self.__on_open__,
                                          cookie=cookies)
         self.__thread__ = Thread(
-            target=self.ws.run_forever, kwargs={
+            target=self.__ws__.run_forever, kwargs={
                 "ping_interval": 60, "ping_timeout": 5}
         )
         self.__thread__.daemon = True
@@ -328,8 +328,8 @@ class senertec(basesocketclient):
         """
         self.logger.info("Logging out..")
         response = self.__get__("/logout")
-        if self.ws:
-            self.ws.close()
+        if self.__ws__:
+            self.__ws__.close()
         self.__session__.close()
         if response.status_code == 200:
             self.logger.debug("Logout was successful.")
