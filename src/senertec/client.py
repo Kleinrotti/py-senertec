@@ -136,8 +136,8 @@ class senertec(basesocketclient):
             format='py-senertec: %(asctime)s %(levelname)-8s %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
-        self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com"
-        self.SSO_HOST = "https://sso-portal.senertec.com"
+        self.__authentication_host__ = "https://dachsconnect.senertec.com"
+        self.__sso_host__ = "https://sso-portal.senertec.com"
         self.__email__ = email
         self.__session__ = None
         self.__language__ = language
@@ -185,7 +185,7 @@ class senertec(basesocketclient):
         return ';'.join(found)
 
     def __post__(self, urlPath: str, payload: str):
-        url = self.AUTHENTICATION_HOST + urlPath
+        url = self.__authentication_host__ + urlPath
         response = self.__session__.post(
             url, data=payload, headers=self.__create_headers__())
         if (response.status_code >= 400 and response.status_code <= 599):
@@ -194,7 +194,7 @@ class senertec(basesocketclient):
         return response
 
     def __get__(self, urlPath: str):
-        url = self.AUTHENTICATION_HOST + urlPath
+        url = self.__authentication_host__ + urlPath
         response = self.__session__.get(
             url, headers=self.__create_headers__())
         if (response.status_code >= 400 and response.status_code <= 599):
@@ -302,13 +302,13 @@ class senertec(basesocketclient):
         self.__logger__.info("Logging in..")
         self.__session__ = requests.Session()
         loginSSOResponse = self.__session__.get(
-            self.AUTHENTICATION_HOST + "/rest/saml2/login")
+            self.__authentication_host__ + "/rest/saml2/login")
 
         authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
         userData = f"username={self.__email__}&password={self.__password__}&{authState}"
         # submit credentials
-        loginResponse = self.__session__.post(self.SSO_HOST + "/simplesaml/module.php/core/loginuserpass.php?",
+        loginResponse = self.__session__.post(self.__sso_host__ + "/simplesaml/module.php/core/loginuserpass.php?",
                                               data=userData, headers=head)
 
         # filter out samlresponse and relaystate for ACS request
@@ -325,7 +325,7 @@ class senertec(basesocketclient):
 
         # do assertion consumer service request with received saml response
         acs = self.__session__.post(
-            self.AUTHENTICATION_HOST + "/rest/saml2/acs", data=acsData, headers=head)
+            self.__authentication_host__ + "/rest/saml2/acs", data=acsData, headers=head)
 
         if acs.history[0].status_code != 302:
             self.__logger__.error("Login failed at ACS request, got no redirect.")
