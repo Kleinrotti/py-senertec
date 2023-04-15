@@ -21,7 +21,7 @@ class basesocketclient:
     def __init__(self, level=logging.WARN):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(level)
-        self.WS_HOST = "wss://dachsconnect.senertec.com/ws"
+        self.__ws_host__ = "wss://dachsconnect.senertec.com/ws"
         self.__is_ws_connected__ = False
         self.__messages__ = [str()]
         self.__thread__ = None
@@ -100,7 +100,7 @@ class basesocketclient:
         cookies = self.__getCookies__(
             self.__session__.cookies, "dachsconnect.senertec.com")
         self.logger.debug("Creating websocket connection..")
-        self.__ws__ = websocket.WebSocketApp(self.WS_HOST,
+        self.__ws__ = websocket.WebSocketApp(self.__ws_host__,
                                          on_message=self.__on_message__,
                                          on_error=self.__on_error__,
                                          on_close=self.__on_close__,
