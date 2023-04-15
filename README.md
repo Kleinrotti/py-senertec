@@ -39,10 +39,10 @@ import json
 import os
 
 #this example uses no filtering, read below how to use a filter instead of None as first parameter.
-senertec = senertec(None, "username", "password")
+senertec = senertec(None)
 #set your callback function for messages
 senertec.messagecallback = self.output
-senertec.login()
+senertec.login("username", "password")
 senertec.init()
 ```
 

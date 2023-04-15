@@ -19,7 +19,7 @@ def start():
     file.close()
     global senertec
     # set your username and password here
-    senertec = senertec(filter, "username", "password", lang.German)
+    senertec = senertec(filter, lang.German)
 
     # to get all possible datapoints you can specify None
     # senertec = senertec(None,"username", "password", lang.German)
@@ -28,7 +28,7 @@ def start():
     senertec.messagecallback = output
 
     # login to dachsportal2
-    if senertec.login() is False:
+    if senertec.login("username", "password") is False:
         return
     # if login was successful you can/should initialize the platform.
     if senertec.init() is False:

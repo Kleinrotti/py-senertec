@@ -119,17 +119,13 @@ class basesocketclient:
 class senertec(basesocketclient):
     """Class to communicate with Senertec and handle network calls"""
 
-    def __init__(self, datapointList=None, email: str = None, password: str = None, language=lang.English, level=logging.INFO):
+    def __init__(self, datapointList=None, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
 
         ``datapointList`` Json string to add only these datapoints instead of everything.
 
         ``language`` Set to your language.
         """
-        if email is None or password is None:
-            raise ValueError(
-                "Arguments 'email', 'passwords'"
-            )
         super().__init__(level)
         logging.basicConfig(
             level=level,
@@ -138,10 +134,8 @@ class senertec(basesocketclient):
         )
         self.__authentication_host__ = "https://dachsconnect.senertec.com"
         self.__sso_host__ = "https://sso-portal.senertec.com"
-        self.__email__ = email
         self.__session__ = None
         self.__language__ = language
-        self.__password__ = password
         self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
@@ -291,9 +285,13 @@ class senertec(basesocketclient):
         """
         return self.__appVersion__
 
-    def login(self):
+    def login(self, email: str, password: str):
         """
-        Login.
+        Login to senertec platform.
+
+        ``email`` Your email your are registered with.
+
+        ``password`` Your password.
 
         This function needs to be called first.
 
@@ -306,7 +304,7 @@ class senertec(basesocketclient):
 
         authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
-        userData = f"username={self.__email__}&password={self.__password__}&{authState}"
+        userData = f"username={email}&password={password}&{authState}"
         # submit credentials
         loginResponse = self.__session__.post(self.__sso_host__ + "/simplesaml/module.php/core/loginuserpass.php?",
                                               data=userData, headers=head)
