@@ -10,7 +10,7 @@ This library supports read-only communication. So *changing* values for your ene
 
 ## Requirements
 
-*   **Python 3.9+**
+*   **Python 3.10+**
 *   **Account for Senertec Dachsportal2/Remeha KWK**
 
 ## Tested with this devices
