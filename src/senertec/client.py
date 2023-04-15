@@ -6,7 +6,6 @@ from threading import Thread
 import requests
 import websocket
 from bs4 import BeautifulSoup
-
 from .obdClass import obdClass
 from .energyUnit import energyUnit
 from .lang import lang
@@ -20,14 +19,14 @@ class basesocketclient:
     """Base class which provides logic for a senertec websocket connection."""
 
     def __init__(self, level=logging.WARN):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(level)
-        self.WS_HOST = "wss://dachsconnect.senertec.com/ws"
+        self.__logger__ = logging.getLogger(__name__)
+        self.__logger__.setLevel(level)
+        self.__ws_host__ = "wss://dachsconnect.senertec.com/ws"
         self.__is_ws_connected__ = False
         self.__messages__ = [str()]
         self.__thread__ = None
-        self.ws = None
-        self.boards = [board()]
+        self.__ws__ = None
+        self.__boards__ = [board()]
         """All available boards with datapoints which can be used in request function"""
 
     def __on_message__(self, ws, message):
@@ -35,11 +34,11 @@ class basesocketclient:
         action = j["action"]
         data = j["data"]
         if action == "CanipValue":
-            self.logger.debug("Received new CanipValue from websocket.")
+            self.__logger__.debug("Received new CanipValue from websocket.")
             # skip old values and array size indicators
             if (data["age"] != 0 or data["size"] == True):
                 return
-            for b in self.boards:
+            for b in self.__boards__:
                 if b.boardName == data["boardName"]:
                     value = canipValue()
                     value.boardName = b.boardName
@@ -63,7 +62,7 @@ class basesocketclient:
                                         try:
                                             value.dataValue = enum["translations"][f"{tempValue}"]
                                         except KeyError:
-                                            self.logger.warning(
+                                            self.__logger__.warning(
                                                 f"No enum translation found for datapoint '{point.friendlyName}'.")
                                             value.dataValue = "Unknown"
                             elif point.gain != 0:
@@ -79,42 +78,42 @@ class basesocketclient:
                             break
         elif action == "HkaStore" and data["updateType"] == "remove":
             sn = j["sn"]
-            self.logger.info(
+            self.__logger__.info(
                 f"Unit with serial {sn} got disconnected.")
         else:
-            self.logger.debug(f"Received new websocket message {action}.")
+            self.__logger__.debug(f"Received new websocket message {action}.")
             self.__messages__.append(message)
 
     def __on_error__(self, ws, error):
-        self.logger.error(f"error : {error}")
+        self.__logger__.error(f"error : {error}")
 
     def __on_close__(self, ws, close_status_code, close_msg):
-        self.logger.info(
+        self.__logger__.info(
             f"Senertec Websocket closed with code {close_status_code}")
         self.__is_ws_connected__ = False
 
     def __on_open__(self, ws):
-        self.logger.info("Connected to Senertec websocket")
+        self.__logger__.info("Connected to Senertec websocket")
         self.__is_ws_connected__ = True
 
     def __create_websocket__(self):
         cookies = self.__getCookies__(
             self.__session__.cookies, "dachsconnect.senertec.com")
-        self.logger.debug("Creating websocket connection..")
-        self.ws = websocket.WebSocketApp(self.WS_HOST,
+        self.__logger__.debug("Creating websocket connection..")
+        self.__ws__ = websocket.WebSocketApp(self.__ws_host__,
                                          on_message=self.__on_message__,
                                          on_error=self.__on_error__,
                                          on_close=self.__on_close__,
                                          on_open=self.__on_open__,
                                          cookie=cookies)
         self.__thread__ = Thread(
-            target=self.ws.run_forever, kwargs={
+            target=self.__ws__.run_forever, kwargs={
                 "ping_interval": 60, "ping_timeout": 5}
         )
         self.__thread__.daemon = True
         self.__thread__.setName("senertec-websocket")
         self.__thread__.start()
-        self.logger.debug("Websocket connection started.")
+        self.__logger__.debug("Websocket connection started.")
 
 
 class senertec(basesocketclient):
@@ -137,13 +136,12 @@ class senertec(basesocketclient):
             format='py-senertec: %(asctime)s %(levelname)-8s %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
-        self.AUTHENTICATION_HOST = "https://dachsconnect.senertec.com"
-        self.SSO_HOST = "https://sso-portal.senertec.com"
-        self.email = email
+        self.__authentication_host__ = "https://dachsconnect.senertec.com"
+        self.__sso_host__ = "https://sso-portal.senertec.com"
+        self.__email__ = email
         self.__session__ = None
-        self.language = language
-        self.password = password
-        self.level = level
+        self.__language__ = language
+        self.__password__ = password
         self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
@@ -154,8 +152,27 @@ class senertec(basesocketclient):
         self.__appVersion__ = ""
         self.messagecallback = (canipValue())
         """Set your callback function to get the data values. Function has to be overloaded with data type ``canipValue``"""
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(level)
+        self.__logger__ = logging.getLogger(__name__)
+        self.__logger__.setLevel(level)
+
+    @property
+    def boards(self) -> list[board]:
+        """Return all boards."""
+        return self.__boards__
+    
+    @property
+    def loglevel(self):
+        """Return the log level."""
+        return self.__logger__.level
+    
+    @property
+    def language(self):
+        """Return or set the language used for sensor names."""
+        return self.__language__
+    
+    @language.setter
+    def language(self, value: lang):
+        self.__language__ = value
 
     def __create_headers__(self):
         headers = {"Content-Type": "application/json"}
@@ -168,7 +185,7 @@ class senertec(basesocketclient):
         return ';'.join(found)
 
     def __post__(self, urlPath: str, payload: str):
-        url = self.AUTHENTICATION_HOST + urlPath
+        url = self.__authentication_host__ + urlPath
         response = self.__session__.post(
             url, data=payload, headers=self.__create_headers__())
         if (response.status_code >= 400 and response.status_code <= 599):
@@ -177,7 +194,7 @@ class senertec(basesocketclient):
         return response
 
     def __get__(self, urlPath: str):
-        url = self.AUTHENTICATION_HOST + urlPath
+        url = self.__authentication_host__ + urlPath
         response = self.__session__.get(
             url, headers=self.__create_headers__())
         if (response.status_code >= 400 and response.status_code <= 599):
@@ -187,7 +204,7 @@ class senertec(basesocketclient):
 
     def __parseDataPoints__(self):
         """Parse all available datapoints for connected unit."""
-        self.logger.debug("Starting to parse datapoints..")
+        self.__logger__.debug("Starting to parse datapoints..")
         dataPointCount = 0
         metaData = self.__metaDataPoints__
         allPoints = []
@@ -222,14 +239,14 @@ class senertec(basesocketclient):
                                     dataPointCount += 1
                                     b1.__datapoints__.append(datap)
                             break
-        self.logger.debug(
+        self.__logger__.debug(
             f"Finished datapoints parsing. Found {len(boardList)} boards with {dataPointCount} datapoints in total.")
-        self.boards = boardList
+        self.__boards__ = boardList
         return
 
     def __parseDataPointsFiltered__(self):
         """Use this function to include only datapoints of datapointList which was set in class constructor."""
-        self.logger.debug("Starting to parse datapoints..")
+        self.__logger__.debug("Starting to parse datapoints..")
         metaData = self.__metaDataPoints__
         blist = []
         dataPointCount = 0
@@ -262,8 +279,8 @@ class senertec(basesocketclient):
                         for b in blist:
                             if b.boardName == boardname:
                                 b.__datapoints__.append(datap)
-        self.boards = blist
-        self.logger.debug(
+        self.__boards__ = blist
+        self.__logger__.debug(
             f"Finished datapoints parsing. Found {len(blist)} boards with {dataPointCount} datapoints in total.")
 
     @property
@@ -282,16 +299,16 @@ class senertec(basesocketclient):
 
         Returns True on success, False on failure.
         """
-        self.logger.info("Logging in..")
+        self.__logger__.info("Logging in..")
         self.__session__ = requests.Session()
         loginSSOResponse = self.__session__.get(
-            self.AUTHENTICATION_HOST + "/rest/saml2/login")
+            self.__authentication_host__ + "/rest/saml2/login")
 
         authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
-        userData = f"username={self.email}&password={self.password}&{authState}"
+        userData = f"username={self.__email__}&password={self.__password__}&{authState}"
         # submit credentials
-        loginResponse = self.__session__.post(self.SSO_HOST + "/simplesaml/module.php/core/loginuserpass.php?",
+        loginResponse = self.__session__.post(self.__sso_host__ + "/simplesaml/module.php/core/loginuserpass.php?",
                                               data=userData, headers=head)
 
         # filter out samlresponse and relaystate for ACS request
@@ -302,18 +319,18 @@ class senertec(basesocketclient):
             relayState = soup.findAll(
                 "input", {"name": "RelayState"})[0]["value"]
         except IndexError:
-            self.logger.error("Login failed, username or password wrong.")
+            self.__logger__.error("Login failed, username or password wrong.")
             return False
         acsData = {'SAMLResponse': {samlResponse}, 'RelayState': {relayState}}
 
         # do assertion consumer service request with received saml response
         acs = self.__session__.post(
-            self.AUTHENTICATION_HOST + "/rest/saml2/acs", data=acsData, headers=head)
+            self.__authentication_host__ + "/rest/saml2/acs", data=acsData, headers=head)
 
         if acs.history[0].status_code != 302:
-            self.logger.error("Login failed at ACS request, got no redirect.")
+            self.__logger__.error("Login failed at ACS request, got no redirect.")
             return False
-        self.logger.info("Login was successful.")
+        self.__logger__.info("Login was successful.")
         return True
 
     def logout(self):
@@ -322,13 +339,13 @@ class senertec(basesocketclient):
 
         Returns True on success, False on failure.
         """
-        self.logger.info("Logging out..")
+        self.__logger__.info("Logging out..")
         response = self.__get__("/logout")
-        if self.ws:
-            self.ws.close()
+        if self.__ws__:
+            self.__ws__.close()
         self.__session__.close()
         if response.status_code == 200:
-            self.logger.debug("Logout was successful.")
+            self.__logger__.debug("Logout was successful.")
             return True
         else:
             return False
@@ -341,17 +358,17 @@ class senertec(basesocketclient):
 
         Returns True on success, False on failure.
         """
-        self.logger.info("Initializing senertec platform...")
+        self.__logger__.info("Initializing senertec platform...")
         response = self.__get__("/rest/info/init")
         if response.status_code == 200:
             self.__create_websocket__()
             j = json.loads(response.text)
             self.__metaDataPoints__ = j["metaDataPoints"]
             self.__enums__ = j["enums"]
-            self.__enumTranslations__ = j["translations"][f"{self.language.value}"]["enums"]
+            self.__enumTranslations__ = j["translations"][f"{self.__language__.value}"]["enums"]
             self.__metaDataTranslations__ = j["translations"][
-                f"{self.language.value}"]["metaDataPoints"]["translations"]
-            self.__errorTranslations__ = j["translations"][f"{self.language.value}"]["errorCategories"]
+                f"{self.__language__.value}"]["metaDataPoints"]["translations"]
+            self.__errorTranslations__ = j["translations"][f"{self.__language__.value}"]["errorCategories"]
             self.__appVersion__ = j["app"]["version"]
             return True
         else:
@@ -382,7 +399,7 @@ class senertec(basesocketclient):
                 unit.street = x["standortAdresse"]
                 unit.productGroup = x["productGroup"]
                 units.append(unit)
-            self.logger.debug(
+            self.__logger__.debug(
                 f"Successful received a list of {len(units)} units.")
             return units
         else:
@@ -432,17 +449,19 @@ class senertec(basesocketclient):
         if response.status_code == 200:
             return json.loads(response.text)
 
-    def request(self, dataPoints: list):
+    def request(self, dataPoints: list | str):
         """
         Request data from specific datapoints of the connected unit.
 
-        Data wil be received through websocket.
+        Data will be received through websocket.
 
-        ``dataPoints`` List of datapoint strings
+        ``dataPoints`` List of datapoint strings or a single datapoint as string.
 
         Returns True on success, False on failure.
         """
         sn = self.__connectedUnit__["seriennummer"]
+        if(type(dataPoints) == str):
+            dataPoints = dataPoints.split()
         j = json.dumps(
             {"seriennummer": sn, "keys": dataPoints})
         response = self.__post__(
