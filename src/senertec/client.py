@@ -6,6 +6,8 @@ from threading import Thread
 import requests
 import websocket
 from bs4 import BeautifulSoup
+
+from .senertecerror import SenertecError
 from .obdClass import obdClass
 from .energyUnit import energyUnit
 from .lang import lang
@@ -16,7 +18,9 @@ from .datapoint import datapoint
 
 
 class basesocketclient:
-    """Base class which provides logic for a senertec websocket connection."""
+    """Base class which provides logic for a senertec websocket connection.
+
+    """
 
     def __init__(self, level=logging.WARN):
         self.__logger__ = logging.getLogger(__name__)
@@ -46,7 +50,7 @@ class basesocketclient:
                     value.deviceSerial = data["sn"]
                     for point in b.datapoints:
                         if point.id == data["dataPointName"]:
-                            #if the data is an array, add the index to the name
+                            # if the data is an array, add the index to the name
                             if (data["index"] != None):
                                 value.friendlyDataName = point.friendlyName + \
                                     " " + data["index"].__str__()
@@ -101,11 +105,11 @@ class basesocketclient:
             self.__session__.cookies, "dachsconnect.senertec.com")
         self.__logger__.debug("Creating websocket connection..")
         self.__ws__ = websocket.WebSocketApp(self.__ws_host__,
-                                         on_message=self.__on_message__,
-                                         on_error=self.__on_error__,
-                                         on_close=self.__on_close__,
-                                         on_open=self.__on_open__,
-                                         cookie=cookies)
+                                             on_message=self.__on_message__,
+                                             on_error=self.__on_error__,
+                                             on_close=self.__on_close__,
+                                             on_open=self.__on_open__,
+                                             cookie=cookies)
         self.__thread__ = Thread(
             target=self.__ws__.run_forever, kwargs={
                 "ping_interval": 60, "ping_timeout": 5}
@@ -117,12 +121,12 @@ class basesocketclient:
 
 
 class senertec(basesocketclient):
-    """Class to communicate with Senertec and handle network calls"""
+    """Class to communicate with Senertec and handle network calls
 
-    def __init__(self, datapointList=None, language=lang.English, level=logging.INFO):
+    """
+
+    def __init__(self, language=lang.English, level=logging.INFO):
         """Constructor, create instance of senertec client.
-
-        ``datapointList`` Json string to add only these datapoints instead of everything.
 
         ``language`` Set to your language.
         """
@@ -136,7 +140,6 @@ class senertec(basesocketclient):
         self.__sso_host__ = "https://sso-portal.senertec.com"
         self.__session__ = None
         self.__language__ = language
-        self.__filteredDatapoints__ = datapointList
         self.__enums__ = []
         self.__metaDataPoints__ = []
         self.__metaDataTranslations__ = []
@@ -151,22 +154,48 @@ class senertec(basesocketclient):
 
     @property
     def boards(self) -> list[board]:
-        """Return all boards."""
+        """Return all boards.
+
+        """
         return self.__boards__
-    
+
     @property
     def loglevel(self):
-        """Return the log level."""
+        """Return the log level.
+
+        """
         return self.__logger__.level
-    
+
     @property
     def language(self):
-        """Return or set the language used for sensor names."""
+        """Return or set the language used for sensor names.
+
+        """
         return self.__language__
-    
+
     @language.setter
     def language(self, value: lang):
         self.__language__ = value
+
+    @property
+    def availableDatapoints(self):
+        """
+        Return the total ammount of all available datapoint from all boards.
+
+        You can call this property after a unit is connected.
+        """
+        count = 0
+        for board in self.boards:
+            count += board.datapointCount
+        return count
+
+    @property
+    def portalVersion(self) -> str:
+        """Returns Senertec Dachsportal version.
+
+        Init function has to be called first.
+        """
+        return self.__appVersion__
 
     def __create_headers__(self):
         headers = {"Content-Type": "application/json"}
@@ -238,64 +267,26 @@ class senertec(basesocketclient):
         self.__boards__ = boardList
         return
 
-    def __parseDataPointsFiltered__(self):
-        """Use this function to include only datapoints of datapointList which was set in class constructor."""
-        self.__logger__.debug("Starting to parse datapoints..")
-        metaData = self.__metaDataPoints__
-        blist = []
-        dataPointCount = 0
-        boardname = ""
-        for a in metaData:
-            for element in self.__filteredDatapoints__[self.__connectedUnit__["productGroup"]]:
-                if metaData[a]["friendlyName"] == element:
-                    for l in self.__connectedUnit__["boards"]:
-                        for o in l["attributes"]:
-                            if o == metaData[a]["name"]:
-                                boardname = l["name"]
-                    datap = datapoint()
-                    datap.sourceId = element
-                    datap.id = metaData[a]["name"]
-                    datap.friendlyName = self.__metaDataTranslations__[
-                        metaData[a]["name"]]
-                    datap.unit = metaData[a]["unit"]
-                    datap.gain = metaData[a]["gain"]
-                    datap.enumName = metaData[a]["enumName"]
-                    datap.array = metaData[a]["array"]
-                    datap.type = obdClass(metaData[a]["obdClass"])
-                    dataPointCount += 1
-                    # avoid doubled board entries
-                    if not any(x for x in blist if x.boardName == boardname):
-                        b = board()
-                        b.__boardName__ = boardname
-                        b.__datapoints__.append(datap)
-                        blist.append(b)
-                    else:
-                        for b in blist:
-                            if b.boardName == boardname:
-                                b.__datapoints__.append(datap)
-        self.__boards__ = blist
-        self.__logger__.debug(
-            f"Finished datapoints parsing. Found {len(blist)} boards with {dataPointCount} datapoints in total.")
-
-    @property
-    def portalVersion(self) -> str:
-        """Returns Senertec Dachsportal version.
-
-        Init function has to be called first.
-        """
-        return self.__appVersion__
-
     def login(self, email: str, password: str):
-        """
-        Login to senertec platform.
+        """Login to senertec platform.
 
-        ``email`` Your email your are registered with.
+        Parameters
+        ----------
 
-        ``password`` Your password.
+        email : ``str``
+            Your email your are registered with.
 
+        password : ``str``
+            Your password.
+
+        Returns
+        -------
+        ``bool``
+            True on success, False on failure.
+
+        Notes
+        -----
         This function needs to be called first.
-
-        Returns True on success, False on failure.
         """
         self.__logger__.info("Logging in..")
         self.__session__ = requests.Session()
@@ -326,16 +317,19 @@ class senertec(basesocketclient):
             self.__authentication_host__ + "/rest/saml2/acs", data=acsData, headers=head)
 
         if acs.history[0].status_code != 302:
-            self.__logger__.error("Login failed at ACS request, got no redirect.")
+            self.__logger__.error(
+                "Login failed at ACS request, got no redirect.")
             return False
         self.__logger__.info("Login was successful.")
         return True
 
     def logout(self):
-        """
-        Logout from senertec.
+        """Logout from senertec.
 
-        Returns True on success, False on failure.
+        Returns
+        -------
+        ``bool``      
+            True on success, False on failure.
         """
         self.__logger__.info("Logging out..")
         response = self.__get__("/logout")
@@ -349,12 +343,16 @@ class senertec(basesocketclient):
             return False
 
     def init(self):
-        """
-        Initialize Senertec platform and connect to websocket.
+        """Initialize Senertec platform and connect to websocket.
 
+        Returns
+        -------
+        ``bool``
+            True on success, False on failure.
+
+        Notes
+        -----
         This function needs to be called after login.
-
-        Returns True on success, False on failure.
         """
         self.__logger__.info("Initializing senertec platform...")
         response = self.__get__("/rest/info/init")
@@ -366,17 +364,20 @@ class senertec(basesocketclient):
             self.__enumTranslations__ = j["translations"][f"{self.__language__.value}"]["enums"]
             self.__metaDataTranslations__ = j["translations"][
                 f"{self.__language__.value}"]["metaDataPoints"]["translations"]
-            self.__errorTranslations__ = j["translations"][f"{self.__language__.value}"]["errorCategories"]
+            self.__errorTranslations__ = j["translations"][
+                f"{self.__language__.value}"]["errorCategories"]
             self.__appVersion__ = j["app"]["version"]
             return True
         else:
             return False
 
     def getUnits(self) -> list[energyUnit]:
-        """
-        Get all units.
+        """Get all units.
 
-        Returns all energy units of this account as object list.
+        Returns
+        -------
+        ``list[energyUnit]``
+            All energy units of this account as object list.
         """
         response = self.__post__(
             "/rest/info/units", json.dumps({"limit": 10, "offset": 0, "filter": {}}))
@@ -404,30 +405,34 @@ class senertec(basesocketclient):
             return None
 
     def connectUnit(self, serial: str):
-        """
-        This function connects to a unit and enables receiving data for that unit.
+        """This function connects to a unit and enables receiving data for that unit.
 
-        ``serial`` Serial number of energy unit. Can be received with getUnits() method.
+        Parameters
+        ----------
+        serial : ``str``
+            Serial number of energy unit. Can be received with getUnits() method.
 
-        Returns True on success, False on failure.
+        Returns
+        -------
+        ``bool``
+            True on success, False on failure.
         """
         response = self.__get__(f"/rest/canip/{serial}")
         if response.status_code == 200:
             self.__connectedUnit__ = json.loads(response.text)
             # if no supported items were set in constructor, do not filter and parse every datapoint
-            if self.__filteredDatapoints__ is None:
-                self.__parseDataPoints__()
-            else:
-                self.__parseDataPointsFiltered__()
+            self.__parseDataPoints__()
             return True
         else:
             return False
 
     def disconnectUnit(self):
-        """
-        Disconnect from a unit.
+        """Disconnect from a unit.
 
-        Returns True on success, False on failure.
+        Returns
+        -------
+        ``bool``
+            True on success, False on failure.
         """
         sn = self.__connectedUnit__["seriennummer"]
         response = self.__get__(f"/rest/canip/{sn}/disconnect")
@@ -437,8 +442,8 @@ class senertec(basesocketclient):
             return False
 
     def getChart(self, chartname: str):
-        """
-        Get a history chart of the connected unit.
+        """Get a history chart of the connected unit.
+
         """
         sn = self.__connectedUnit__["seriennummer"]
         response = self.__post__(
@@ -447,31 +452,120 @@ class senertec(basesocketclient):
         if response.status_code == 200:
             return json.loads(response.text)
 
-    def request(self, dataPoints: list | str):
+    def request(self, datapoints: list | str | dict | None):
         """
         Request data from specific datapoints of the connected unit.
 
         Data will be received through websocket.
 
-        ``dataPoints`` List of datapoint strings or a single datapoint as string.
+        Parameters
+        ----------
+            ``dataPoints`` List of datapoint as string e.g. [IM028, BM001, FM049] 
 
-        Returns True on success, False on failure.
+            or as single string e.g. IM028.
+
+            or as dict from a datapointFilter.json (use ``json.load()`` for that).
+
+            or None if you want to request all available datapoints.
+
+        Returns
+        -------
+        ``int``
+            Number of requested datapoint on success.
+
+        Raises
+        ------
+        ``ValueError``
+            When the parameter type doesn't match
+        ``SenertecError``
+            When there were errors while requesting
+
+        Notes
+        -----
+        If you use ``None`` as parameter it could happen that not all datapoints get returned correctly.
+        
+        This is due to the ammount of datapoints which are requested in such a short period of time.
         """
+        lst = []
+        if (type(datapoints) == str):
+            datapoints = datapoints.split()
+
+        if (type(datapoints) == dict):
+            for point in datapoints[self.__connectedUnit__["productGroup"]]:
+                for board in self.boards:
+                    datapoint = board.getFullDatapointIdByName(point)
+                    if (datapoint):
+                        lst.append(datapoint)
+                        break
+
+        # if datapoints is None request all
+        elif (datapoints is None):
+            for points in self.boards:
+                lst.extend(points.getFullDataPointIds())
+        elif (type(datapoints) == list):
+            for point in datapoints:
+                for board in self.boards:
+                    datapoint = board.getFullDatapointIdByName(point)
+                    if (datapoint):
+                        lst.append(datapoint)
+                        break
+        else:
+            raise ValueError("Datapoint type doesn't match.")
+
         sn = self.__connectedUnit__["seriennummer"]
-        if(type(dataPoints) == str):
-            dataPoints = dataPoints.split()
         j = json.dumps(
-            {"seriennummer": sn, "keys": dataPoints})
+            {"seriennummer": sn, "keys": lst})
         response = self.__post__(
             f"/rest/canip/{sn}/request", j)
         result = json.loads(response.text)
         if response.status_code == 200 and result["success"] and not result["errorKeys"]:
-            return True
+            return len(lst)
         else:
-            return False
+            raise SenertecError(result["message"])
+
+    def request_by_type(self, type: obdClass):
+        """
+        Request data by a specific type.
+
+        Data will be received through websocket.
+
+        Parameters
+        ----------
+
+        type : ``obdClass``
+            Type of the datapoints you want to request.
+
+        Returns 
+        -------
+        ``int``
+            Number of requested datapoint on success.
+
+        Raises
+        ------
+        ``SenertecError``
+            When there were errors while requesting
+        """
+        lst = []
+
+        for board in self.boards:
+            for point in board.datapoints:
+                if (point.type == type):
+                    lst.append(board.boardName + "." + point.id)
+        sn = self.__connectedUnit__["seriennummer"]
+        j = json.dumps(
+            {"seriennummer": sn, "keys": lst})
+        response = self.__post__(
+            f"/rest/canip/{sn}/request", j)
+        result = json.loads(response.text)
+        if response.status_code == 200 and result["success"] and not result["errorKeys"]:
+            return len(lst)
+        else:
+            raise SenertecError(result["message"])
 
     def getBoardList(self):
-        """Get all boards of the connected unit"""
+        """Get all boards of the connected unit
+        
+        """
         lst = [str()]
         for b in self.__connectedUnit__["boards"]:
             lst.append(b["name"])
@@ -480,9 +574,23 @@ class senertec(basesocketclient):
     def getErrors(self, onlyCurrentErrors: bool = True) -> list[canipError]:
         """Get an error history of the connected unit.
 
-        ``onlyCurrentErrors`` Return only errors which are present now. Set to false if you want error history.
+        Parameters
+        ----------
 
-        This gets loaded when a unit gets connected."""
+        onlyCurrentErrors : ``bool``
+            Return only errors which are present now. Set to false if you want error history.
+
+        Returns
+        -------
+        ``list[canipError]``
+            A list of canipError objects.
+        
+        Notes
+        -----
+        You can read the errors only if the unit is connected.
+
+        Keep in mind if you want to refresh this information you have to reconnect the unit.
+        """
         lst = []
         for b in self.__connectedUnit__["boards"]:
             for e in b["canipErrors"]:
