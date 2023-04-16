@@ -15,7 +15,7 @@ class board(object):
     @property
     def datapointCount(self) -> int:
         """Return number of datapoints."""
-        return self.__datapoints__.count()
+        return len(self.__datapoints__)
     
     @property
     def datapoints(self):
