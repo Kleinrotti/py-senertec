@@ -44,7 +44,7 @@ class TestFunctions(TestBase):
         self.senertec.messagecallback = self.output
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
-        self.totalDataPoints = self.senertec.request("IM028")
+        self.totalDataPoints = self.senertec.request("AM027")
         self.assertGreater(self.totalDataPoints, 0)
         self.wait_and_print()
 
@@ -80,6 +80,14 @@ class TestFunctions(TestBase):
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
         self.totalDataPoints = self.senertec.request_by_type(obdClass.Signal)
+        self.assertGreater(self.totalDataPoints, 0)
+        self.wait_and_print()
+
+    def test_request_with_board(self):
+        self.senertec.messagecallback = self.output
+        serial = self.senertec.getUnits()
+        self.senertec.connectUnit(serial[0].serial)
+        self.totalDataPoints = self.senertec.request_with_board("AM027", "SCB-04@1")
         self.assertGreater(self.totalDataPoints, 0)
         self.wait_and_print()
             

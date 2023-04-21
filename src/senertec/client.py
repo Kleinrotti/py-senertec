@@ -469,7 +469,7 @@ class senertec(basesocketclient):
         Returns
         -------
         ``int``
-            Number of requested datapoint on success.
+            Number of requested datapoints on success.
 
         Raises
         ------
@@ -481,7 +481,7 @@ class senertec(basesocketclient):
         Notes
         -----
         If you use ``None`` as parameter it could happen that not all datapoints get returned correctly.
-        
+
         This is due to the ammount of datapoints which are requested in such a short period of time.
         """
         lst = []
@@ -510,16 +510,7 @@ class senertec(basesocketclient):
         else:
             raise ValueError("Datapoint type doesn't match.")
 
-        sn = self.__connectedUnit__["seriennummer"]
-        j = json.dumps(
-            {"seriennummer": sn, "keys": lst})
-        response = self.__post__(
-            f"/rest/canip/{sn}/request", j)
-        result = json.loads(response.text)
-        if response.status_code == 200 and result["success"] and not result["errorKeys"]:
-            return len(lst)
-        else:
-            raise SenertecError(result["message"])
+        return self.__request__(lst)
 
     def request_by_type(self, type: obdClass):
         """
@@ -536,7 +527,7 @@ class senertec(basesocketclient):
         Returns 
         -------
         ``int``
-            Number of requested datapoint on success.
+            Number of requested datapoints on success.
 
         Raises
         ------
@@ -549,20 +540,65 @@ class senertec(basesocketclient):
             for point in board.datapoints:
                 if (point.type == type):
                     lst.append(board.boardName + "." + point.id)
+        return self.__request__(lst)
+
+    def request_with_board(self, datapoint: str, boardName: str):
+        """
+        Request data for a specific datapoint in a board.
+
+        Data will be received through websocket.
+
+        Parameters
+        ----------
+
+        datapoint : ``str``
+            Datapoint name e.g. AM027.
+        boardName : ``str``
+            Name of the board e.g. SCB-04@1
+
+        Returns 
+        -------
+        ``int``
+            Number of requested datapoints on success.
+
+        Raises
+        ------
+        ``KeyError``
+            when no datapoint was found.
+        
+        Notes
+        -----
+        This is useful if the same datapoint exists for multiple boards 
+        
+        and you want only one for that board.
+        """
+        lst = []
+
+        for board in self.boards:
+            if(board.boardName == boardName):
+                datapoint = board.getFullDatapointIdByName(datapoint)
+                if (datapoint):
+                    lst.append(datapoint)
+                    break
+                else:
+                    raise KeyError(f"Datapoint {datapoint} doesn't exist for board {boardName}")
+        return self.__request__(lst)
+
+    def __request__(self, keys: list):
         sn = self.__connectedUnit__["seriennummer"]
         j = json.dumps(
-            {"seriennummer": sn, "keys": lst})
+            {"seriennummer": sn, "keys": keys})
         response = self.__post__(
             f"/rest/canip/{sn}/request", j)
         result = json.loads(response.text)
         if response.status_code == 200 and result["success"] and not result["errorKeys"]:
-            return len(lst)
+            return len(keys)
         else:
             raise SenertecError(result["message"])
 
     def getBoardList(self):
         """Get all boards of the connected unit
-        
+
         """
         lst = [str()]
         for b in self.__connectedUnit__["boards"]:
@@ -582,7 +618,7 @@ class senertec(basesocketclient):
         -------
         ``list[canipError]``
             A list of canipError objects.
-        
+
         Notes
         -----
         You can read the errors only if the unit is connected.
