@@ -232,7 +232,10 @@ class senertec(basesocketclient):
         metaData = self.__metaDataPoints__
         allPoints = []
         boardList = []
-
+        for b in self.__connectedUnit__["boards"]:
+            device = board()
+            device.__boardName__ = b["name"]
+            boardList.append(device)
         # first collect all available datapoints
         for point in metaData:
             if metaData[point]["friendlyName"] is not None:
@@ -249,11 +252,6 @@ class senertec(basesocketclient):
                 allPoints.append(datap)
                 # loop through all boards of unit
                 for b in self.__connectedUnit__["boards"]:
-                    # add board to the collection if its not already included
-                    if not any(x for x in boardList if x.boardName == b["name"]):
-                        device = board()
-                        device.__boardName__ = b["name"]
-                        boardList.append(device)
                     # loop through datapoints of that board and add available points
                     for at in b["attributes"]:
                         if at == datap.id:
