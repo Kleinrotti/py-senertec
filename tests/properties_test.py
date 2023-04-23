@@ -20,3 +20,8 @@ class TestProperties(TestBase):
         self.assertEqual(self.senertec.__language__, lang.English)
         self.senertec.language = lang.German
         self.assertEqual(self.senertec.__language__, lang.German)
+
+    def test_availableDatapoints(self):
+        serial = self.senertec.getUnits()
+        self.senertec.connectUnit(serial[0].serial)
+        self.assertGreater(self.senertec.availableDatapoints, 0)
