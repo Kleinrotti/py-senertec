@@ -25,7 +25,7 @@ def start():
     timeoutCounter = 0
 
     # to get all possible datapoints you can specify None
-    # senertec = senertec(None)
+    # senertecClient = senertec(None)
 
     # set your callback function where received data should go to
     senertecClient.messagecallback = output
