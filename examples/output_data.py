@@ -38,6 +38,9 @@ def start():
         return
     # get all energy units/heating systems from your account.
     units = senertecClient.getUnits()
+    if len(units) < 1:
+        print("No energy units were found")
+        return
     # connect to first unit
     if senertecClient.connectUnit(units[0].serial) is False:
         return
