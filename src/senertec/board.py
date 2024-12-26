@@ -3,6 +3,7 @@ from .datapoint import datapoint
 
 class board(object):
     """Represents an electronic board of the energy unit."""
+
     def __init__(self):
         self.__boardName__ = str()
         """Name of the board."""
@@ -11,22 +12,22 @@ class board(object):
         self.__datapoints__ = [datapoint()]
         """Stores datapoints of the board."""
         self.__datapoints__.pop()  # remove default element
-    
+
     @property
     def datapointCount(self) -> int:
         """Return number of datapoints."""
         return len(self.__datapoints__)
-    
+
     @property
     def datapoints(self):
         """Returns all datapoints."""
         return self.__datapoints__
-    
+
     @property
     def boardName(self):
         """Return the board name."""
         return self.__boardName__
-    
+
     @property
     def friendlyName(self):
         """Return the human readable name of the board."""
@@ -51,7 +52,7 @@ class board(object):
     def getDatapointByName(self, name: str):
         """
         Get a datapoint by its name e.g BM001. Not case sensitive.
-        
+
         Returns the datapoint object or None if not found.
         """
         for point in self.__datapoints__:
@@ -61,7 +62,7 @@ class board(object):
     def getFullDataPointIds(self):
         """
         Get all datapoints by its full id.
-        
+
         Returns a list of all datapoints as string. The first part of the string is the board identifier followed
         by a unique id which is random on each new session.
         """

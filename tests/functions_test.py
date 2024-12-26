@@ -32,7 +32,7 @@ class TestFunctions(TestBase):
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
         chart = self.senertec.getChart("ChartChpActivityFCEnduser")
-        self.assertTrue(chart != None)
+        self.assertTrue(chart is not None)
 
     def test_errors(self):
         serial = self.senertec.getUnits()
@@ -52,7 +52,8 @@ class TestFunctions(TestBase):
         self.senertec.messagecallback = self.output
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
-        self.totalDataPoints = self.senertec.request(["IM028", "BM001", "FM049", "FM020"])
+        self.totalDataPoints = self.senertec.request(
+            ["IM028", "BM001", "FM049", "FM020"])
         self.assertGreater(self.totalDataPoints, 0)
         self.wait_and_print()
 
@@ -79,7 +80,7 @@ class TestFunctions(TestBase):
         self.senertec.messagecallback = self.output
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
-        self.totalDataPoints = self.senertec.request_by_type(obdClass.Signal)
+        self.totalDataPoints = self.senertec.request_by_type(obdClass.Counter)
         self.assertGreater(self.totalDataPoints, 0)
         self.wait_and_print()
 
@@ -87,17 +88,16 @@ class TestFunctions(TestBase):
         self.senertec.messagecallback = self.output
         serial = self.senertec.getUnits()
         self.senertec.connectUnit(serial[0].serial)
-        self.totalDataPoints = self.senertec.request_with_board("AM027", "SCB-04@1")
+        self.totalDataPoints = self.senertec.request_with_board(
+            "AM027", "SCB-04@1")
         self.assertGreater(self.totalDataPoints, 0)
         self.wait_and_print()
-            
 
-    
     def printValues(self):
         for value in self.result:
             print("\nSource: " + value.sourceDatapoint + "\nBoard: " + value.boardName + "\nName: " + value.friendlyDataName + "\nValue: " +
-              value.dataValue.__str__() + value.dataUnit)
-            
+                  value.dataValue.__str__() + value.dataUnit)
+
         print(f"Total count: {self.counter} from {self.totalDataPoints}")
 
     def output(self, value: canipValue):

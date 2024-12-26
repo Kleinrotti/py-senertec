@@ -1,5 +1,6 @@
 class canipValue(object):
     """Represents a data value received from websocket."""
+
     def __init__(self):
         self.boardName = str()
         """Name of the board."""

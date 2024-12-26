@@ -1,9 +1,6 @@
-import json
-import logging
 import os
 import unittest
 from unittest.mock import Mock
-from src.senertec.canipValue import canipValue
 from src.senertec.client import senertec
 
 

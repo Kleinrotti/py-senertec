@@ -40,7 +40,7 @@ class basesocketclient:
         if action == "CanipValue":
             self.__logger__.debug("Received new CanipValue from websocket.")
             # skip old values and array size indicators
-            if (data["age"] != 0 or data["size"] == True):
+            if (data["age"] != 0 or data["size"] is True):
                 return
             for b in self.__boards__:
                 if b.boardName == data["boardName"]:
@@ -51,7 +51,7 @@ class basesocketclient:
                     for point in b.datapoints:
                         if point.id == data["dataPointName"]:
                             # if the data is an array, add the index to the name
-                            if (data["index"] != None):
+                            if (data["index"] is not None):
                                 value.friendlyDataName = point.friendlyName + \
                                     " " + data["index"].__str__()
                                 value.sourceDatapoint = point.sourceId + \
@@ -60,7 +60,7 @@ class basesocketclient:
                                 value.friendlyDataName = point.friendlyName
                                 value.sourceDatapoint = point.sourceId
                             tempValue = data["value"]
-                            if point.enumName != None:
+                            if point.enumName is not None:
                                 for enum in self.__enumTranslations__:
                                     if point.enumName == enum["name"]:
                                         try:
@@ -185,8 +185,8 @@ class senertec(basesocketclient):
         You can call this property after a unit is connected.
         """
         count = 0
-        for board in self.boards:
-            count += board.datapointCount
+        for b in self.boards:
+            count += b.datapointCount
         return count
 
     @property
@@ -485,13 +485,13 @@ class senertec(basesocketclient):
         This is due to the ammount of datapoints which are requested in such a short period of time.
         """
         lst = []
-        if (type(datapoints) == str):
+        if (isinstance(datapoints, str)):
             datapoints = datapoints.split()
 
-        if (type(datapoints) == dict):
+        if (isinstance(datapoints, dict)):
             for point in datapoints[self.__connectedUnit__["productGroup"]]:
-                for board in self.boards:
-                    datapoint = board.getFullDatapointIdByName(point)
+                for b in self.boards:
+                    datapoint = b.getFullDatapointIdByName(point)
                     if (datapoint):
                         lst.append(datapoint)
                         break
@@ -500,10 +500,10 @@ class senertec(basesocketclient):
         elif (datapoints is None):
             for points in self.boards:
                 lst.extend(points.getFullDataPointIds())
-        elif (type(datapoints) == list):
+        elif (isinstance(datapoints, list)):
             for point in datapoints:
-                for board in self.boards:
-                    datapoint = board.getFullDatapointIdByName(point)
+                for b in self.boards:
+                    datapoint = b.getFullDatapointIdByName(point)
                     if (datapoint):
                         lst.append(datapoint)
                         break
@@ -524,7 +524,7 @@ class senertec(basesocketclient):
         type : ``obdClass``
             Type of the datapoints you want to request.
 
-        Returns 
+        Returns
         -------
         ``int``
             Number of requested datapoints on success.
@@ -536,10 +536,10 @@ class senertec(basesocketclient):
         """
         lst = []
 
-        for board in self.boards:
-            for point in board.datapoints:
+        for b in self.boards:
+            for point in b.datapoints:
                 if (point.type == type):
-                    lst.append(board.boardName + "." + point.id)
+                    lst.append(b.boardName + "." + point.id)
         return self.__request__(lst)
 
     def request_with_board(self, datapoint: str, boardName: str):
@@ -556,7 +556,7 @@ class senertec(basesocketclient):
         boardName : ``str``
             Name of the board e.g. SCB-04@1
 
-        Returns 
+        Returns
         -------
         ``int``
             Number of requested datapoints on success.
@@ -565,23 +565,24 @@ class senertec(basesocketclient):
         ------
         ``KeyError``
             when no datapoint was found.
-        
+
         Notes
         -----
         This is useful if the same datapoint exists for multiple boards 
-        
+
         and you want only one for that board.
         """
         lst = []
 
-        for board in self.boards:
-            if(board.boardName == boardName):
-                datapoint = board.getFullDatapointIdByName(datapoint)
+        for b in self.boards:
+            if (b.boardName == boardName):
+                datapoint = b.getFullDatapointIdByName(datapoint)
                 if (datapoint):
                     lst.append(datapoint)
                     break
                 else:
-                    raise KeyError(f"Datapoint {datapoint} doesn't exist for board {boardName}")
+                    raise KeyError(
+                        f"Datapoint {datapoint} doesn't exist for board {boardName}")
         return self.__request__(lst)
 
     def __request__(self, keys: list):
