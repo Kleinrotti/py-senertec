@@ -5,6 +5,7 @@ import logging
 from threading import Thread
 import requests
 import websocket
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 
 from .senertecerror import SenertecError
@@ -439,14 +440,26 @@ class senertec(basesocketclient):
         else:
             return False
 
-    def getChart(self, chartname: str):
+    def getChart(self, chartname: str, start=datetime.now() - timedelta(hours=24), end=datetime.now()):
         """Get a history chart of the connected unit.
+
+        Parameters
+        ----------
+        ``chartname`` Name of the chart
+
+        ``start`` Start time of the chart as datetime object
+
+        ``end`` End time of the chart as datetime object
+
+        Returns
+        -------
+        The response as json
 
         """
         sn = self.__connectedUnit__["seriennummer"]
         response = self.__post__(
             f"/rest/charts/{sn}/data", json.dumps(
-                {"start": 1641596400000, "end": None, "parameters": {}, "chartName": chartname, "sn": sn}))
+                {"start": start.strftime("%G-%m-%dT%XZ"), "end": end.strftime("%G-%m-%dT%XZ"), "parameters": {}, "chartName": chartname, "sn": sn}))
         if response.status_code == 200:
             return json.loads(response.text)
 
