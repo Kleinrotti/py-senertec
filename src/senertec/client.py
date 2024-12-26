@@ -491,10 +491,19 @@ class senertec(basesocketclient):
         if (isinstance(datapoints, dict)):
             for point in datapoints[self.__connectedUnit__["productGroup"]]:
                 for b in self.boards:
-                    datapoint = b.getFullDatapointIdByName(point)
-                    if (datapoint):
-                        lst.append(datapoint)
-                        break
+                    if isinstance(point, str):
+                        datapoint = b.getFullDatapointIdByName(point)
+                        if (datapoint):
+                            lst.append(datapoint)
+                            break
+                    # if entry contains boardname and datapoint name as list
+                    # search for the datapoint in the specified board
+                    elif isinstance(point, list):
+                        if b.boardName == point[0]:
+                            datapoint = b.getFullDatapointIdByName(point[1])
+                            if (datapoint):
+                                lst.append(datapoint)
+                                break
 
         # if datapoints is None request all
         elif (datapoints is None):

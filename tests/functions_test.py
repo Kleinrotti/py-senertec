@@ -58,7 +58,7 @@ class TestFunctions(TestBase):
         self.wait_and_print()
 
     def test_request_dict(self):
-        file = open(os.getcwd() + "\\examples\\datapointFilter.json")
+        file = open(os.getcwd() + "\\tests\\datapointFilter.json")
         filter = json.load(file)
         file.close()
         self.senertec.messagecallback = self.output
