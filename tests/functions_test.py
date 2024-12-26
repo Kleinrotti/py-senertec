@@ -1,6 +1,6 @@
 import os
 from time import sleep
-from test_base_test import TestBase
+from tests.base_test import TestBase
 from src.senertec.canipValue import canipValue
 from src.senertec.obdClass import obdClass
 import json

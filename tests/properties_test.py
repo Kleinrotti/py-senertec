@@ -1,4 +1,4 @@
-from test_base_test import TestBase
+from tests.base_test import TestBase
 from datetime import datetime, timezone
 from src.senertec.canipError import canipError
 from src.senertec.lang import lang
