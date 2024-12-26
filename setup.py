@@ -17,7 +17,7 @@ setuptools.setup(
     project_urls={
         "Bug Tracker": "https://github.com/Kleinrotti/py-senertec/issues",
     },
-    python_requires='>=3.6',
+    python_requires='>=3.10',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
