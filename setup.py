@@ -9,7 +9,6 @@ setuptools.setup(
     author="Kleinrotti",
     author_email="",
     package_dir={"": "src"},
-    packages=setuptools.find_packages("src"),
     description="Senertec energy system gen2 interface.",
     long_description=long_description,
     long_description_content_type="text/markdown",
