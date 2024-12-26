@@ -19,13 +19,10 @@ def start():
     filter = json.load(file)
     file.close()
     # create a new senertec object with filter
-    senertecClient = senertec(filter)
+    senertecClient = senertec()
     global result
     totalDataPoints = 0
     timeoutCounter = 0
-
-    # to get all possible datapoints you can specify None
-    # senertecClient = senertec(None)
 
     # set your callback function where received data should go to
     senertecClient.messagecallback = output
@@ -44,25 +41,20 @@ def start():
     # connect to first unit
     if senertecClient.connectUnit(units[0].serial) is False:
         return
-    print(f"Connected to unit: {units[0].model} with serial: {units[0].serial}")
+    print(
+        f"Connected to unit: {units[0].model} with serial: {units[0].serial}")
     # get errors to output them below
     errors = senertecClient.getErrors()
 
     # request all datapoints.
-    for board in senertecClient.boards:
-        ids = board.getFullDataPointIds()
-        senertecClient.request(ids)
-        totalDataPoints += len(board.datapoints)
+    # totalDataPoints = senertecClient.request(None)
 
-    # if you want specific datapoints you can loop through the boards to find it and request it then
-    #for board in senertecClient.boards:
-    #    datapoint = board.getFullDatapointIdByName("MM011")
-    #    if(datapoint):
-    #        senertecClient.request(datapoint)
-    #        totalDataPoints += 1
-    #        break
+    # request datapoint from specific board
+    # totalDataPoints = senertecClient.request_with_board("AM027", "SCB-04@1")
 
-    
+    # request datapoints from filter
+    totalDataPoints = senertecClient.request(filter)
+
     # loop wait 2 seconds and checks if all points get received
     while (len(result) < totalDataPoints):
         # break after 60sec timeout
@@ -78,7 +70,7 @@ def start():
         print("Source: " + value.sourceDatapoint + "\nName: " + value.friendlyDataName + "\nValue: " +
               value.dataValue.__str__() + value.dataUnit + "\n")
 
-    #print total count of received values  
+    # print total count of received values
     print(f"Received {len(result)} values.")
 
     # print all errors

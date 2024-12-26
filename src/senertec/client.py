@@ -75,7 +75,7 @@ class basesocketclient:
                                                         point.gain, 2)
                             else:
                                 value.dataValue = tempValue
-                            if point.unit != None:
+                            if point.unit is not None:
                                 value.dataUnit = point.unit
                             else:
                                 value.dataUnit = ""
@@ -419,7 +419,6 @@ class senertec(basesocketclient):
         response = self.__get__(f"/rest/canip/{serial}")
         if response.status_code == 200:
             self.__connectedUnit__ = json.loads(response.text)
-            # if no supported items were set in constructor, do not filter and parse every datapoint
             self.__parseDataPoints__()
             return True
         else:
