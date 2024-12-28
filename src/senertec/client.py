@@ -383,19 +383,19 @@ class senertec(basesocketclient):
         if response.status_code == 200:
             values = json.loads(response.text)
             units = []
-            for x in values["units"]:
+            for x in values.get("units", []):
                 unit = energyUnit()
-                unit.model = x["benennung"]
-                unit.serial = x["seriennummer"]
-                unit.connected = x["connected"]
-                unit.online = x["online"]
-                unit.itemNumber = x["artikelNummer"]
-                unit.contact = x["standortAnsprech"]
-                unit.city = x["standortOrt"]
-                unit.locationName = x["standortName"]
-                unit.postalCode = x["standortPlz"]
-                unit.street = x["standortAdresse"]
-                unit.productGroup = x["productGroup"]
+                unit.model = x.get("benennung", "")
+                unit.serial = x.get("seriennummer", "")
+                unit.connected = x.get("connected", "")
+                unit.online = x.get("online", "")
+                unit.itemNumber = x.get("artikelNummer", "")
+                unit.contact = x.get("standortAnsprech", "")
+                unit.city = x.get("standortOrt", "")
+                unit.locationName = x.get("standortName", "")
+                unit.postalCode = x.get("standortPlz", "")
+                unit.street = x.get("standortAdresse", "")
+                unit.productGroup = x.get("productGroup", "")
                 units.append(unit)
             self.__logger__.debug(
                 f"Successful received a list of {len(units)} units.")
