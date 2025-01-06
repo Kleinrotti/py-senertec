@@ -7,6 +7,7 @@ import requests
 import websocket
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
+import urllib.parse
 
 from .senertecerror import SenertecError
 from .obdClass import obdClass
@@ -294,7 +295,8 @@ class senertec(basesocketclient):
 
         authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
-        userData = f"username={email}&password={password}&{authState}"
+        pass_encoded = urllib.parse.quote(password)
+        userData = f"username={email}&password={pass_encoded}&{authState}"
         # submit credentials
         loginResponse = self.__session__.post(self.__sso_host__ + "/simplesaml/module.php/core/loginuserpass.php?",
                                               data=userData, headers=head)
