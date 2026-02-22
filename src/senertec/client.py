@@ -85,7 +85,7 @@ class basesocketclient:
         elif action == "HkaStore" and data["updateType"] == "remove":
             sn = j["sn"]
             self.__logger__.info(
-                f"Unit with serial {sn} got disconnected.")
+                f"Unit with serial {sn[:3]}XXX got disconnected")
         else:
             self.__logger__.debug(f"Received new websocket message {action}.")
             self.__messages__.append(message)
@@ -422,6 +422,7 @@ class senertec(basesocketclient):
         if response.status_code == 200:
             self.__connectedUnit__ = json.loads(response.text)
             self.__parseDataPoints__()
+            self.__logger__.info(f"Unit with serial {serial[:3]}XXX connected")
             return True
         else:
             return False
