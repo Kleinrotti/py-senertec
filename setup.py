@@ -23,7 +23,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "websocket-client>=1.2.3",
-        "requests>=2.27"
+        "websocket-client>=1.8.0",
+        "requests>=2.33.0"
     ]
 )
