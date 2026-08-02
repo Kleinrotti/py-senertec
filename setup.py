@@ -24,7 +24,6 @@ setuptools.setup(
     ],
     install_requires=[
         "websocket-client>=1.2.3",
-        "requests>=2.27",
-        "beautifulsoup4>=4.11"
+        "requests>=2.27"
     ]
 )
