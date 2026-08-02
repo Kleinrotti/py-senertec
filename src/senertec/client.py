@@ -1,7 +1,7 @@
 import inspect
 import json
 import logging
-from threading import Thread
+from threading import Thread, Event
 import requests
 import websocket
 from datetime import datetime, timedelta
@@ -45,10 +45,11 @@ class basesocketclient:
         self.__logger__.setLevel(level)
         self.__ws_host__ = "wss://dachsconnect.senertec.com/ws"
         self.__is_ws_connected__ = False
-        self.__messages__ = [str()]
+        self.__ws_ready_event__ = Event()
+        self.__messages__ = []
         self.__thread__ = None
         self.__ws__ = None
-        self.__boards__ = [board()]
+        self.__boards__ = []
         """All available boards with datapoints which can be used in request function"""
 
     def __on_message__(self, ws, message):
@@ -113,15 +114,21 @@ class basesocketclient:
         self.__logger__.info(
             f"Senertec Websocket closed with code {close_status_code}")
         self.__is_ws_connected__ = False
+        self.__ws_ready_event__.set()
 
     def __on_open__(self, ws):
-        self.__logger__.info("Connected to Senertec websocket")
         self.__is_ws_connected__ = True
+        self.__ws_ready_event__.set()
 
-    def __create_websocket__(self):
+    def __create_websocket__(self, timeout=10):
+        if self.__thread__ and self.__thread__.is_alive():
+            self.__logger__.warning("Websocket thread already running, skipping.")
+            return self.__is_ws_connected__
         cookies = self.__getCookies__(
             self.__session__.cookies, "dachsconnect.senertec.com")
         self.__logger__.debug("Creating websocket connection..")
+        self.__ws_ready_event__.clear()
+        self.__is_ws_connected__ = False
         self.__ws__ = websocket.WebSocketApp(self.__ws_host__,
                                              on_message=self.__on_message__,
                                              on_error=self.__on_error__,
@@ -129,13 +136,24 @@ class basesocketclient:
                                              on_open=self.__on_open__,
                                              cookie=cookies)
         self.__thread__ = Thread(
-            target=self.__ws__.run_forever, kwargs={
-                "ping_interval": 60, "ping_timeout": 5}
+            target=self.__ws__.run_forever,
+            kwargs={"ping_interval": 60, "ping_timeout": 5},
+            name="senertec-websocket",
+            daemon=True,
         )
-        self.__thread__.daemon = True
-        self.__thread__.setName("senertec-websocket")
         self.__thread__.start()
-        self.__logger__.debug("Websocket connection started.")
+
+        # wait until the socket is actually open (or failed / timed out)
+        if not self.__ws_ready_event__.wait(timeout=timeout):
+            self.__logger__.error(
+                f"Websocket did not connect within {timeout} seconds.")
+            return False
+
+        if not self.__is_ws_connected__:
+            self.__logger__.error("Websocket connection failed to open.")
+            return False
+
+        return True
 
 
 class senertec(basesocketclient):
@@ -359,6 +377,8 @@ class senertec(basesocketclient):
         response = self.__get__("/logout")
         if self.__ws__:
             self.__ws__.close()
+        if self.__thread__ and self.__thread__.is_alive():
+            self.__thread__.join(timeout=5)
         self.__session__.close()
         if response.status_code == 200:
             self.__logger__.debug("Logout was successful.")
@@ -380,20 +400,22 @@ class senertec(basesocketclient):
         """
         self.__logger__.info("Initializing senertec platform...")
         response = self.__get__("/rest/info/init")
-        if response.status_code == 200:
-            self.__create_websocket__()
-            j = json.loads(response.text)
-            self.__metaDataPoints__ = j["metaDataPoints"]
-            self.__enums__ = j["enums"]
-            self.__enumTranslations__ = j["translations"][f"{self.__language__.value}"]["enums"]
-            self.__metaDataTranslations__ = j["translations"][
-                f"{self.__language__.value}"]["metaDataPoints"]["translations"]
-            self.__errorTranslations__ = j["translations"][
-                f"{self.__language__.value}"]["errorCategories"]
-            self.__appVersion__ = j["app"]["version"]
-            return True
-        else:
+        if response.status_code != 200:
             return False
+
+        if not self.__create_websocket__():
+            return False
+
+        j = json.loads(response.text)
+        self.__metaDataPoints__ = j["metaDataPoints"]
+        self.__enums__ = j["enums"]
+        self.__enumTranslations__ = j["translations"][f"{self.__language__.value}"]["enums"]
+        self.__metaDataTranslations__ = j["translations"][
+            f"{self.__language__.value}"]["metaDataPoints"]["translations"]
+        self.__errorTranslations__ = j["translations"][
+            f"{self.__language__.value}"]["errorCategories"]
+        self.__appVersion__ = j["app"]["version"]
+        return True
 
     def getUnits(self) -> list[energyUnit]:
         """Get all units.
@@ -644,11 +666,11 @@ class senertec(basesocketclient):
         else:
             raise SenertecError(result["message"])
 
-    def getBoardList(self):
+    def getBoardList(self) -> list[str]:
         """Get all boards of the connected unit
 
         """
-        lst = [str()]
+        lst = []
         for b in self.__connectedUnit__["boards"]:
             lst.append(b["name"])
         return lst

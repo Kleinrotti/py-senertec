@@ -1,4 +1,3 @@
-from .datapoint import datapoint
 
 
 class board(object):
@@ -9,9 +8,8 @@ class board(object):
         """Name of the board."""
         self.__friendlyName__ = str()
         """Human readable name of the board."""
-        self.__datapoints__ = [datapoint()]
+        self.__datapoints__ = []
         """Stores datapoints of the board."""
-        self.__datapoints__.pop()  # remove default element
 
     @property
     def datapointCount(self) -> int:
