@@ -1,4 +1,3 @@
-from asyncio.log import logger
 import inspect
 import json
 import logging
@@ -6,10 +5,10 @@ from threading import Thread
 import requests
 import websocket
 from datetime import datetime, timedelta
-from bs4 import BeautifulSoup
+from html.parser import HTMLParser
 import urllib.parse
 
-from .senertecerror import SenertecError
+from .senertecerror import SenertecError, LoginServerError, InvalidCredentialsError
 from .obdClass import obdClass
 from .energyUnit import energyUnit
 from .lang import lang
@@ -17,6 +16,23 @@ from .canipError import canipError
 from .canipValue import canipValue
 from .board import board
 from .datapoint import datapoint
+
+
+
+class _SamlFormParser(HTMLParser):
+    """Extract SAMLResponse and RelayState hidden input values."""
+
+    def __init__(self):
+        super().__init__()
+        self.fields = {}
+
+    def handle_starttag(self, tag, attrs):
+        if tag != "input":
+            return
+        attr = dict(attrs)
+        name = attr.get("name")
+        if name in ("SAMLResponse", "RelayState") and "value" in attr:
+            self.fields[name] = attr["value"]
 
 
 class basesocketclient:
@@ -214,7 +230,7 @@ class senertec(basesocketclient):
         response = self.__session__.post(
             url, data=payload, headers=self.__create_headers__())
         if (response.status_code >= 400 and response.status_code <= 599):
-            logger.error("Error in post request by function: " + inspect.stack()
+            self.__logger__.error("Error in post request by function: " + inspect.stack()
                          [1].function + " HTTP response: " + response.text)
         return response
 
@@ -223,7 +239,7 @@ class senertec(basesocketclient):
         response = self.__session__.get(
             url, headers=self.__create_headers__())
         if (response.status_code >= 400 and response.status_code <= 599):
-            logger.error("Error in get request by function: {" + inspect.stack()
+            self.__logger__.error("Error in get request by function: {" + inspect.stack()
                          [1].function + "} HTTP response: " + response.text)
         return response
 
@@ -272,57 +288,64 @@ class senertec(basesocketclient):
 
         Parameters
         ----------
-
         email : ``str``
-            Your email your are registered with.
-
+            The email you are registered with.
         password : ``str``
             Your password.
 
-        Returns
+        Exceptions
         -------
-        ``bool``
-            True on success, False on failure.
+        ``LoginServerError``
+        
+        ``InvalidCredentialsError``
 
         Notes
         -----
         This function needs to be called first.
+        
+        Raises exception on failure.
         """
         self.__logger__.info("Logging in..")
         self.__session__ = requests.Session()
-        loginSSOResponse = self.__session__.get(
-            self.__authentication_host__ + "/rest/saml2/login")
-
-        authState = loginSSOResponse.url.split("loginuserpass.php?")[1]
         head = {"Content-Type": "application/x-www-form-urlencoded"}
-        pass_encoded = urllib.parse.quote(password)
-        userData = f"username={email}&password={pass_encoded}&{authState}"
-        # submit credentials
-        loginResponse = self.__session__.post(self.__sso_host__ + "/simplesaml/module.php/core/loginuserpass.php?",
-                                              data=userData, headers=head)
 
-        # filter out samlresponse and relaystate for ACS request
-        soup = BeautifulSoup(loginResponse.text, features="html.parser")
         try:
-            samlResponse = soup.findAll(
-                "input", {"name": "SAMLResponse"})[0]["value"]
-            relayState = soup.findAll(
-                "input", {"name": "RelayState"})[0]["value"]
-        except IndexError:
-            self.__logger__.error("Login failed, username or password wrong.")
-            return False
-        acsData = {'SAMLResponse': {samlResponse}, 'RelayState': {relayState}}
+            login_sso_response = self.__session__.get(
+                self.__authentication_host__ + "/rest/saml2/login", timeout=30)
+            login_sso_response.raise_for_status()
+            auth_state = dict(urllib.parse.parse_qsl(
+                urllib.parse.urlparse(login_sso_response.url).query))
+            if not auth_state:
+                raise LoginServerError(
+                    "No AuthState in redirect; login server may be unavailable.")
 
-        # do assertion consumer service request with received saml response
-        acs = self.__session__.post(
-            self.__authentication_host__ + "/rest/saml2/acs", data=acsData, headers=head)
+            login_response = self.__session__.post(
+                self.__sso_host__ + "/simplesaml/module.php/core/loginuserpass.php",
+                data={"username": email, "password": password, **auth_state},
+                headers=head, timeout=30)
+            login_response.raise_for_status()
+        except requests.RequestException as exc:
+            raise LoginServerError(f"Login request failed: {exc}") from exc
 
-        if acs.history[0].status_code != 302:
-            self.__logger__.error(
-                "Login failed at ACS request, got no redirect.")
-            return False
+        parser = _SamlFormParser()
+        parser.feed(login_response.text)
+        saml_response = parser.fields.get("SAMLResponse")
+        relay_state = parser.fields.get("RelayState")
+        if not saml_response or not relay_state:
+            raise InvalidCredentialsError("Username or password wrong.")
+
+        acs_data = {"SAMLResponse": saml_response, "RelayState": relay_state}
+        try:
+            acs = self.__session__.post(
+                self.__authentication_host__ + "/rest/saml2/acs",
+                data=acs_data, headers=head, timeout=30)
+        except requests.RequestException as exc:
+            raise LoginServerError(f"ACS request failed: {exc}") from exc
+
+        if not acs.history or acs.history[0].status_code != 302:
+            raise LoginServerError("ACS request returned no redirect.")
+
         self.__logger__.info("Login was successful.")
-        return True
 
     def logout(self):
         """Logout from senertec.
