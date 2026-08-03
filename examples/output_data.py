@@ -5,6 +5,7 @@
 #
 from senertec.client import senertec
 from senertec.canipValue import canipValue
+from senertec.senertecerror import LoginServerError, InvalidCredentialsError
 import json
 from time import sleep
 import os
@@ -28,7 +29,13 @@ def start():
     senertecClient.messagecallback = output
 
     # login to dachsportal2 with email and password
-    if senertecClient.login("username", "password") is False:
+    try:
+        senertecClient.login("username", "password")
+    except InvalidCredentialsError:
+        print("Invalid login details")
+        return
+    except LoginServerError as ex:
+        print(ex)
         return
     # if login was successful you need to initialize the platform.
     if senertecClient.init() is False:
